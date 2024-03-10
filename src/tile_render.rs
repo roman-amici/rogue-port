@@ -50,8 +50,8 @@ impl TileRender {
     pub fn new(
         sprite_info: SpriteSheetInfo,
         video_subsystem: &VideoSubsystem,
+        screen_tile_size : u32,
     ) -> Result<Self, String> {
-        let screen_tile_size = 48;
         let window_width = 40 * screen_tile_size;
         let window_height = 20 * screen_tile_size;
         let window = video_subsystem

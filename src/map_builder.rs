@@ -16,6 +16,7 @@ impl MapBuilder {
     pub fn new(
         width_tiles: usize,
         height_tiles: usize,
+        num_rooms : usize,
         tile_map: Vec<usize>,
         rng: &mut dyn RngCore,
     ) -> Self {
@@ -23,7 +24,7 @@ impl MapBuilder {
             map: Map::new(width_tiles, height_tiles, tile_map),
             rooms: vec![],
             player_start: Point::new(0, 0),
-            num_rooms: 10,
+            num_rooms,
         };
 
         builder.build_random_rooms(rng);

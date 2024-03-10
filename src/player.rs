@@ -1,6 +1,6 @@
 use sdl2::{keyboard::Keycode, rect::Point};
 
-use crate::{prelude::Map, tile_render::TileRender};
+use crate::prelude::*;
 
 pub struct Player {
     pub position: Point,
@@ -15,15 +15,18 @@ impl Player {
         }
     }
 
-    pub fn render(&self, renderer: &mut TileRender) {
+    pub fn render(&self, renderer: &mut TileRender, camera : &Camera) {
+        let x_screen = (self.position.x - camera.left_x) as usize;
+        let y_screen = (self.position.y - camera.top_y) as usize;
+        
         renderer.draw_tile_grid(
-            self.position.x as usize,
-            self.position.y as usize,
+            x_screen,
+            y_screen,
             self.tile_index,
         );
     }
 
-    pub fn update_position(&mut self, keys: &Vec<Keycode>, map: &Map) -> bool {
+    pub fn update_position(&mut self, keys: &Vec<Keycode>, map: &Map, camera : &mut Camera) -> bool {
         let delta = keys
             .iter()
             .filter_map(|k| match *k {
@@ -39,7 +42,9 @@ impl Player {
         let new_pos = self.position + delta;
         if map.player_can_enter(new_pos) {
             self.position = new_pos;
+            camera.player_move(new_pos);
         }
+
 
         Point::new(0, 0) != delta
     }

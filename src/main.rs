@@ -1,19 +1,20 @@
 use std::time::Duration;
 
-use map_builder::MapBuilder;
-use prelude::{Map, Player};
+use prelude::*;
 use sdl2::{event::Event, image::InitFlag, keyboard::Keycode, rect::Point};
-use tile_render::{SpriteSheetInfo, TileRender};
 
 mod map;
 mod map_builder;
 mod player;
 mod tile_render;
+mod camera;
 
 mod prelude {
     pub use crate::map::*;
     pub use crate::map_builder::*;
     pub use crate::player::*;
+    pub use crate::camera::*;
+    pub use crate::tile_render::*;
 }
 
 fn main() -> Result<(), String> {
@@ -29,11 +30,17 @@ fn main() -> Result<(), String> {
     let rows = 20;
     let cols = 40;
 
-    let mut renderer = TileRender::new(info, &video_subsystem)?;
+    let viewport = Viewport {
+        height_tiles : rows,
+        width_tiles : cols
+    };
+
+    let mut renderer = TileRender::new(info, &video_subsystem, 16)?;
 
     let rng = &mut rand::thread_rng();
-    let map_builder = MapBuilder::new(cols, rows, vec![35, 46], rng);
+    let map_builder = MapBuilder::new((cols*4) as usize, (rows*4) as usize, 20, vec![35, 46], rng);
 
+    let mut camera = Camera::new(viewport, map_builder.player_start);
     let map = map_builder.map;
     let mut player = Player::new(map_builder.player_start);
 
@@ -59,13 +66,13 @@ fn main() -> Result<(), String> {
             .collect();
 
         let now = timers.ticks();
-        if (now - last_player_update) > 80 && player.update_position(&keys, &map) {
+        if (now - last_player_update) > 80 && player.update_position(&keys, &map, &mut camera) {
             last_player_update = now;
         }
 
         renderer.start_batch();
-        map.render(&mut renderer);
-        player.render(&mut renderer);
+        map.render(&mut renderer, &camera);
+        player.render(&mut renderer, &camera);
         renderer.end_batch();
         ::std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 60));
     }
