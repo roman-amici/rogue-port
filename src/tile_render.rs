@@ -41,6 +41,7 @@ impl SpriteSheet {
 pub struct TileRender {
     window_width: u32,
     window_height: u32,
+    screen_tile_size: u32,
     canvas: Canvas<Window>,
     graphics: SpriteSheet,
 }
@@ -50,10 +51,11 @@ impl TileRender {
         sprite_info: SpriteSheetInfo,
         video_subsystem: &VideoSubsystem,
     ) -> Result<Self, String> {
-        let window_width = 1920;
-        let window_height = 1080;
+        let screen_tile_size = 48;
+        let window_width = 40 * screen_tile_size;
+        let window_height = 20 * screen_tile_size;
         let window = video_subsystem
-            .window("dungeon", 1920, 1080)
+            .window("dungeon", window_width, window_height)
             .position_centered()
             .build()
             .or_else(|x| Err(x.to_string()))?;
@@ -65,11 +67,11 @@ impl TileRender {
 
         let texture_creator = canvas.texture_creator();
         let sprite_texture = texture_creator.load_texture(&sprite_info.path)?;
-        let query = sprite_texture.query();
+        let texture_query = sprite_texture.query();
 
         let graphics = SpriteSheet {
-            cols: (query.width / sprite_info.tile_size_pixels) as usize,
-            rows: (query.height / sprite_info.tile_size_pixels) as usize,
+            cols: (texture_query.width / sprite_info.tile_size_pixels) as usize,
+            rows: (texture_query.height / sprite_info.tile_size_pixels) as usize,
             sprite_texture,
             tile_size_pixels: sprite_info.tile_size_pixels,
         };
@@ -77,36 +79,34 @@ impl TileRender {
         Ok(TileRender {
             window_width,
             window_height,
+            screen_tile_size,
             canvas,
             graphics,
         })
     }
 
-    pub fn fill(&mut self, tile_index: usize) {
-        let rows = self.window_width / self.graphics.tile_size_pixels;
-        let cols = self.window_height / self.graphics.tile_size_pixels;
-
+    pub fn start_batch(&mut self) {
         self.canvas.set_draw_color((0, 0, 0));
         self.canvas.clear();
+    }
 
-        for i in 0..rows {
-            for j in 0..cols {
-                let x = i * self.graphics.tile_size_pixels;
-                let y = j * self.graphics.tile_size_pixels;
-
-                self.graphics.render_tile(
-                    &mut self.canvas,
-                    tile_index,
-                    Rect::new(
-                        x as i32,
-                        y as i32,
-                        self.graphics.tile_size_pixels,
-                        self.graphics.tile_size_pixels,
-                    ),
-                )
-            }
-        }
-
+    pub fn end_batch(&mut self) {
         self.canvas.present();
+    }
+
+    pub fn draw_tile_grid(&mut self, col: usize, row: usize, tile_index: usize) {
+        let x = col as u32 * self.screen_tile_size;
+        let y = row as u32 * self.screen_tile_size;
+
+        self.graphics.render_tile(
+            &mut self.canvas,
+            tile_index,
+            Rect::new(
+                x as i32,
+                y as i32,
+                self.screen_tile_size,
+                self.screen_tile_size,
+            ),
+        );
     }
 }
