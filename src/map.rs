@@ -59,26 +59,4 @@ impl Map {
             && self.tiles[self.map_index(point.x as usize, point.y as usize)] == TileType::Floor
     }
 
-    pub fn render(&self, render: &mut TileRender, camera : &Camera) {
-        for y in camera.top_y..camera.bottom_y {
-            for x in camera.left_x..camera.right_x {
-                if !self.in_bounds(Point::new(x,y)){
-                    continue;
-                }
-
-                let map_index = self.map_index(x as usize, y as usize );
-
-                let x_screen = (x - camera.left_x) as usize;
-                let y_screen = (y - camera.top_y) as usize;
-                match self.tiles[map_index] {
-                    TileType::Floor => {
-                        render.draw_tile_grid(x_screen, y_screen, self.tile_map[TileType::Floor as usize])
-                    }
-                    TileType::Wall => {
-                        render.draw_tile_grid(x_screen, y_screen, self.tile_map[TileType::Wall as usize])
-                    }
-                }
-            }
-        }
-    }
 }

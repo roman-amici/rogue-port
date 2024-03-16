@@ -2,7 +2,7 @@ use bevy_ecs::component::Component;
 use sdl2::rect::Point;
 
 
-#[derive(Component)]
+#[derive(Component,Copy,Clone)]
 pub struct WorldPosition {
     pub x : i32,
     pub y : i32,
