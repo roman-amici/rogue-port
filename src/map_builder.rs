@@ -16,7 +16,7 @@ impl MapBuilder {
     pub fn new(
         width_tiles: usize,
         height_tiles: usize,
-        num_rooms : usize,
+        num_rooms: usize,
         tile_map: Vec<usize>,
         rng: &mut dyn RngCore,
     ) -> Self {

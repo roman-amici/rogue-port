@@ -6,28 +6,28 @@ use sdl2::{event::Event, image::InitFlag, keyboard::Keycode};
 
 mod components;
 
-mod map;
-mod map_builder;
-mod tile_render;
 mod camera;
 mod input_manager;
+mod map;
+mod map_builder;
 mod spawner;
 mod systems;
+mod tile_render;
 
 mod prelude {
+    pub use crate::camera::*;
+    pub use crate::components::prelude::*;
+    pub use crate::input_manager::*;
     pub use crate::map::*;
     pub use crate::map_builder::*;
-    pub use crate::camera::*;
-    pub use crate::tile_render::*;
-    pub use crate::input_manager::*;
-    pub use crate::components::prelude::*;
     pub use crate::spawner::*;
     pub use crate::systems::*;
+    pub use crate::tile_render::*;
 }
 
 struct State {
-    ecs : World,
-    systems : Schedule
+    ecs: World,
+    systems: Schedule,
 }
 
 fn main() -> Result<(), String> {
@@ -46,16 +46,22 @@ fn main() -> Result<(), String> {
     let cols = 40;
 
     let viewport = Viewport {
-        height_tiles : rows,
-        width_tiles : cols
+        height_tiles: rows,
+        width_tiles: cols,
     };
 
-    let renderer = TileRender::new(info, &video_subsystem, 16)?;
+    let renderer = TileRender::new(info, &video_subsystem, 64)?;
 
     ecs.insert_non_send_resource(renderer);
 
     let rng = &mut rand::thread_rng();
-    let map_builder = MapBuilder::new((cols*4) as usize, (rows*4) as usize, 20, vec![35, 46], rng);
+    let map_builder = MapBuilder::new(
+        (cols * 4) as usize,
+        (rows * 4) as usize,
+        20,
+        vec![35, 46],
+        rng,
+    );
 
     let camera = Camera::new(viewport, map_builder.player_start);
     let map = map_builder.map;
@@ -66,10 +72,16 @@ fn main() -> Result<(), String> {
 
     let mut state = State {
         ecs,
-        systems : build_schedule()
+        systems: build_schedule(),
     };
 
     spawn_player(&mut state.ecs, map_builder.player_start.into());
+    map_builder
+        .rooms
+        .iter()
+        .skip(1)
+        .map(|r| r.center())
+        .for_each(|pos| spawn_monster(&mut state.ecs, rng, pos.into()));
 
     let mut event_pump = sdl_context.event_pump()?;
     let timers = sdl_context.timer()?;
@@ -88,13 +100,11 @@ fn main() -> Result<(), String> {
 
         let now = timers.ticks();
         if (now - last_frame) > 80 {
-
-
             let keys: Vec<Keycode> = event_pump
-            .keyboard_state()
-            .pressed_scancodes()
-            .filter_map(Keycode::from_scancode)
-            .collect();
+                .keyboard_state()
+                .pressed_scancodes()
+                .filter_map(Keycode::from_scancode)
+                .collect();
 
             let mut input_manager = state.ecs.resource_mut::<InputManager>();
             input_manager.update_keys(keys);

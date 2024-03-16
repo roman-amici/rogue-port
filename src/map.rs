@@ -54,9 +54,8 @@ impl Map {
             && point.y < self.height_tiles as i32
     }
 
-    pub fn player_can_enter(&self, point: Point) -> bool {
+    pub fn can_enter(&self, point: Point) -> bool {
         self.in_bounds(point)
             && self.tiles[self.map_index(point.x as usize, point.y as usize)] == TileType::Floor
     }
-
 }

@@ -1,11 +1,10 @@
 use bevy_ecs::component::Component;
 use sdl2::rect::Point;
 
-
-#[derive(Component,Copy,Clone)]
+#[derive(Component, Copy, Clone, PartialEq)]
 pub struct WorldPosition {
-    pub x : i32,
-    pub y : i32,
+    pub x: i32,
+    pub y: i32,
 }
 
 impl Into<Point> for WorldPosition {
@@ -17,8 +16,8 @@ impl Into<Point> for WorldPosition {
 impl From<Point> for WorldPosition {
     fn from(value: Point) -> Self {
         Self {
-            x : value.x,
-            y : value.y
+            x: value.x,
+            y: value.y,
         }
     }
 }
