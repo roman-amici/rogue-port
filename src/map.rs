@@ -1,3 +1,4 @@
+use bevy_ecs::system::Resource;
 use sdl2::rect::Point;
 
 use crate::{tile_render::TileRender, Camera};
@@ -8,6 +9,7 @@ pub enum TileType {
     Floor,
 }
 
+#[derive(Resource)]
 pub struct Map {
     pub width_tiles: usize,
     pub height_tiles: usize,

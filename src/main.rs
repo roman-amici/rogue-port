@@ -1,13 +1,18 @@
 use std::time::Duration;
 
+use bevy_ecs::{schedule::Schedule, world::World};
 use prelude::*;
 use sdl2::{event::Event, image::InitFlag, keyboard::Keycode, rect::Point};
+
+mod components;
 
 mod map;
 mod map_builder;
 mod player;
 mod tile_render;
 mod camera;
+mod input_manager;
+mod spawner;
 
 mod prelude {
     pub use crate::map::*;
@@ -15,6 +20,18 @@ mod prelude {
     pub use crate::player::*;
     pub use crate::camera::*;
     pub use crate::tile_render::*;
+    pub use crate::input_manager::*;
+    pub use crate::components::prelude::*;
+    pub use crate::spawner::*;
+}
+
+fn build_schedule() -> Schedule {
+    todo!()
+}
+
+struct State {
+    ecs : World,
+    systems : Schedule
 }
 
 fn main() -> Result<(), String> {
@@ -27,6 +44,8 @@ fn main() -> Result<(), String> {
         tile_size_pixels: 32,
     };
 
+    let mut ecs = World::new();
+
     let rows = 20;
     let cols = 40;
 
@@ -37,12 +56,22 @@ fn main() -> Result<(), String> {
 
     let mut renderer = TileRender::new(info, &video_subsystem, 16)?;
 
+    ecs.insert_non_send_resource(renderer);
+
     let rng = &mut rand::thread_rng();
     let map_builder = MapBuilder::new((cols*4) as usize, (rows*4) as usize, 20, vec![35, 46], rng);
 
     let mut camera = Camera::new(viewport, map_builder.player_start);
     let map = map_builder.map;
     let mut player = Player::new(map_builder.player_start);
+
+    ecs.insert_resource(camera);
+    ecs.insert_resource(InputManager::new());
+
+    let state = State {
+        ecs,
+        systems : build_schedule()
+    };
 
     let mut event_pump = sdl_context.event_pump()?;
     let timers = sdl_context.timer()?;
@@ -66,14 +95,14 @@ fn main() -> Result<(), String> {
             .collect();
 
         let now = timers.ticks();
-        if (now - last_player_update) > 80 && player.update_position(&keys, &map, &mut camera) {
-            last_player_update = now;
-        }
+        // if (now - last_player_update) > 80 && player.update_position(&keys, &map, &mut camera) {
+        //     last_player_update = now;
+        // }
 
-        renderer.start_batch();
-        map.render(&mut renderer, &camera);
-        player.render(&mut renderer, &camera);
-        renderer.end_batch();
+        // renderer.start_batch();
+        // map.render(&mut renderer, &camera);
+        // player.render(&mut renderer, &camera);
+        // renderer.end_batch();
         ::std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 60));
     }
 

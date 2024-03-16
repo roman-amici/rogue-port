@@ -1,3 +1,4 @@
+use bevy_ecs::system::Resource;
 use sdl2::{
     image::{InitFlag, LoadTexture},
     rect::Rect,

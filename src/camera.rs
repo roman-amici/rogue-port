@@ -1,3 +1,4 @@
+use bevy_ecs::system::Resource;
 use sdl2::rect::Point;
 
 use crate::prelude::*;
@@ -7,6 +8,7 @@ pub struct Viewport {
     pub height_tiles : u32,
 }
 
+#[derive(Resource)]
 pub struct Camera {
     pub viewport : Viewport,
     // Mapspace coordinates
