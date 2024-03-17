@@ -1,10 +1,8 @@
-use bevy_ecs::system::Resource;
+
+use std::collections::HashMap;
+
 use sdl2::{
-    image::{InitFlag, LoadTexture},
-    rect::Rect,
-    render::{Canvas, Texture, TextureQuery},
-    video::Window,
-    Sdl, VideoSubsystem,
+    image::LoadTexture, rect::Rect, render::{Canvas, Texture, TextureCreator}, ttf::Font, video::Window, VideoSubsystem
 };
 
 pub struct SpriteSheetInfo {
@@ -39,11 +37,67 @@ impl SpriteSheet {
     }
 }
 
-pub struct TileRender {
+pub struct Render {
     window_width: u32,
     window_height: u32,
-    screen_tile_size: u32,
     canvas: Canvas<Window>,
+    tile_render : TileRender,
+    text_render : TextRender,
+}
+
+impl Render {
+    pub fn start_batch(&mut self) {
+        self.canvas.set_draw_color((0, 0, 0));
+        self.canvas.clear();
+    }
+
+    pub fn end_batch(&mut self) {
+        self.canvas.present();
+    }
+}
+
+pub struct StringTexture {
+    text : String,
+    texture : Texture
+}
+
+pub struct TextRender {
+    texture_creator : TextureCreator<Window>,
+    font : Font<'a>,
+    texture_cache : HashMap<u64, StringTexture>,
+    next_index : u64,
+}
+
+impl TextRender {
+
+    fn create_string_texture(texture_creator : &mut TextureCreator<Window>, text : &str) {
+        texture_creator
+    }
+
+    pub fn update_entry(&mut self, index : Option<u64>, text : &str) -> u64 {
+        if let Some(index) = index {
+            if let Some(cache_entry) = self.texture_cache.get_mut(&index) {
+                if cache_entry.text != text {
+                    unsafe {
+                        cache_entry.texture.destroy();
+                    }
+
+                    cache_entry.texture = create_string_texture(text);
+                }
+            }
+        }
+    }
+
+    pub fn render_text(&mut self, canvas : &mut Canvas<Window>, index : Option<u64>, text : &str, x : i32, y : i32) -> u64 {
+        
+        let mut index = self.next_index;
+
+
+    }
+}
+
+pub struct TileRender {
+    screen_tile_size: u32,
     graphics: SpriteSheet,
 }
 
@@ -78,29 +132,17 @@ impl TileRender {
         };
 
         Ok(TileRender {
-            window_width,
-            window_height,
             screen_tile_size,
-            canvas,
             graphics,
         })
     }
 
-    pub fn start_batch(&mut self) {
-        self.canvas.set_draw_color((0, 0, 0));
-        self.canvas.clear();
-    }
-
-    pub fn end_batch(&mut self) {
-        self.canvas.present();
-    }
-
-    pub fn draw_tile_grid(&mut self, col: usize, row: usize, tile_index: usize) {
+    pub fn draw_tile_grid(&self, canvas : &mut Canvas<Window>, col: usize, row: usize, tile_index: usize) {
         let x = col as u32 * self.screen_tile_size;
         let y = row as u32 * self.screen_tile_size;
 
         self.graphics.render_tile(
-            &mut self.canvas,
+            canvas,
             tile_index,
             Rect::new(
                 x as i32,
