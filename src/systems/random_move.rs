@@ -1,12 +1,18 @@
-use bevy_ecs::system::{Query, Res};
+use bevy_ecs::{
+    entity::Entity,
+    system::{Query, ResMut},
+};
 use rand::{self, Rng};
 use sdl2::rect::Point;
 
-use crate::{Map, RandomMover, WorldPosition};
+use crate::{Messenger, RandomMover, WantsToMove, WorldPosition};
 
-pub fn random_move(mut query: Query<(&mut WorldPosition, &RandomMover)>, map: Res<Map>) {
+pub fn random_move(
+    mut query: Query<(Entity, &WorldPosition, &RandomMover)>,
+    mut messenger: ResMut<Messenger<WantsToMove>>,
+) {
     let rng = &mut rand::thread_rng();
-    for (mut pos, _) in query.iter_mut() {
+    for (entity, pos, _) in query.iter_mut() {
         let delta = match rng.gen_range(0..4) {
             0 => Point::new(-1, 0),
             1 => Point::new(1, 0),
@@ -16,8 +22,9 @@ pub fn random_move(mut query: Query<(&mut WorldPosition, &RandomMover)>, map: Re
         let point: Point = (*pos).into();
         let destination = point + delta;
 
-        if map.can_enter(destination) {
-            *pos = destination.into();
-        }
+        messenger.messages.push(WantsToMove {
+            destination,
+            entity,
+        })
     }
 }

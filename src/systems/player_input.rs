@@ -1,14 +1,36 @@
-use bevy_ecs::system::{Query, Res, ResMut};
+use bevy_ecs::{
+    entity::Entity,
+    event::EventWriter,
+    system::{Query, ResMut},
+};
 use sdl2::{keyboard::Keycode, rect::Point};
 
-use crate::{components::prelude::Player, Camera, InputManager, Map, WorldPosition};
+use crate::{
+    components::prelude::Player, InputManager, Messenger, TurnState, WantsToMove, WorldPosition,
+};
 
 pub fn player_input(
-    mut query: Query<(&Player, &mut WorldPosition)>,
+    mut query: Query<(Entity, &Player, &WorldPosition)>,
     input_manager: ResMut<InputManager>,
-    map: Res<Map>,
-    mut camera: ResMut<Camera>,
+    mut turn_state: ResMut<TurnState>,
+
+    mut move_events: ResMut<Messenger<WantsToMove>>,
 ) {
+    let is_move = input_manager.keys.iter().any(|k| match *k {
+        Keycode::Left => true,
+        Keycode::Right => true,
+        Keycode::Up => true,
+        Keycode::Down => true,
+        Keycode::Space => true,
+        _ => false,
+    });
+
+    if !is_move {
+        return;
+    }
+
+    *turn_state = TurnState::PlayerTurn;
+
     let delta = input_manager
         .keys
         .iter()
@@ -22,17 +44,13 @@ pub fn player_input(
         .nth(0)
         .unwrap_or(Point::new(0, 0));
 
-    if delta == Point::new(0, 0) {
-        return;
-    }
-
-    for (_, mut pos) in query.iter_mut() {
+    for (entity, _, pos) in query.iter_mut() {
         let position: Point = (*pos).into();
         let destination = position + delta;
 
-        if map.can_enter(destination) {
-            *pos = destination.into();
-            camera.player_move(destination);
-        }
+        move_events.messages.push(WantsToMove {
+            destination,
+            entity,
+        });
     }
 }

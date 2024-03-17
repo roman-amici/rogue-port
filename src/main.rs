@@ -1,6 +1,6 @@
 use std::time::Duration;
 
-use bevy_ecs::{schedule::Schedule, world::World};
+use bevy_ecs::{schedule::Schedule, system::Resource, world::World};
 use prelude::*;
 use sdl2::{event::Event, image::InitFlag, keyboard::Keycode};
 
@@ -10,6 +10,7 @@ mod camera;
 mod input_manager;
 mod map;
 mod map_builder;
+mod messenger;
 mod spawner;
 mod systems;
 mod tile_render;
@@ -20,6 +21,7 @@ mod prelude {
     pub use crate::input_manager::*;
     pub use crate::map::*;
     pub use crate::map_builder::*;
+    pub use crate::messenger::*;
     pub use crate::spawner::*;
     pub use crate::systems::*;
     pub use crate::tile_render::*;
@@ -27,7 +29,16 @@ mod prelude {
 
 struct State {
     ecs: World,
-    systems: Schedule,
+    awaiting_input: Schedule,
+    player_turn: Schedule,
+    enemy_turn: Schedule,
+}
+
+#[derive(Resource, Copy, Clone, Debug, PartialEq)]
+enum TurnState {
+    AwaitingInput,
+    PlayerTurn,
+    EnemyTurn,
 }
 
 fn main() -> Result<(), String> {
@@ -53,6 +64,7 @@ fn main() -> Result<(), String> {
     let renderer = TileRender::new(info, &video_subsystem, 64)?;
 
     ecs.insert_non_send_resource(renderer);
+    ecs.insert_resource(TurnState::AwaitingInput);
 
     let rng = &mut rand::thread_rng();
     let map_builder = MapBuilder::new(
@@ -69,10 +81,13 @@ fn main() -> Result<(), String> {
     ecs.insert_resource(camera);
     ecs.insert_resource(InputManager::new());
     ecs.insert_resource(map);
+    ecs.insert_resource(Messenger::<WantsToMove>::new());
 
     let mut state = State {
         ecs,
-        systems: build_schedule(),
+        awaiting_input: build_input_schedule(),
+        player_turn: build_player_schedule(),
+        enemy_turn: build_enemy_schedule(),
     };
 
     spawn_player(&mut state.ecs, map_builder.player_start.into());
@@ -99,7 +114,7 @@ fn main() -> Result<(), String> {
         }
 
         let now = timers.ticks();
-        if (now - last_frame) > 80 {
+        if (now - last_frame) > 30 {
             let keys: Vec<Keycode> = event_pump
                 .keyboard_state()
                 .pressed_scancodes()
@@ -112,7 +127,13 @@ fn main() -> Result<(), String> {
             let mut renderer = state.ecs.non_send_resource_mut::<TileRender>();
             renderer.start_batch();
 
-            state.systems.run(&mut state.ecs);
+            let turn = state.ecs.resource::<TurnState>();
+
+            match *turn {
+                TurnState::AwaitingInput => state.awaiting_input.run(&mut state.ecs),
+                TurnState::PlayerTurn => state.player_turn.run(&mut state.ecs),
+                TurnState::EnemyTurn => state.enemy_turn.run(&mut state.ecs),
+            }
 
             let mut renderer = state.ecs.non_send_resource_mut::<TileRender>();
             renderer.end_batch();
