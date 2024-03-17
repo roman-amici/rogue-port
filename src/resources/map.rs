@@ -1,9 +1,7 @@
 use bevy_ecs::system::Resource;
 use sdl2::rect::Point;
 
-use crate::{tile_render::TileRender, Camera};
-
-#[derive(Copy, Clone, PartialEq)]
+#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub enum TileType {
     Wall,
     Floor,

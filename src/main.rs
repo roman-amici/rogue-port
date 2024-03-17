@@ -2,29 +2,27 @@ use std::time::Duration;
 
 use bevy_ecs::{schedule::Schedule, system::Resource, world::World};
 use prelude::*;
+use render::{
+    new_canvas, render_map_layer, render_sprite_layer, sprite_sheet_info::SpriteSheetInfo,
+};
 use sdl2::{event::Event, image::InitFlag, keyboard::Keycode};
 
 mod components;
 
-mod camera;
 mod input_manager;
-mod map;
 mod map_builder;
-mod messenger;
+mod render;
+mod resources;
 mod spawner;
 mod systems;
-mod tile_render;
 
 mod prelude {
-    pub use crate::camera::*;
     pub use crate::components::prelude::*;
     pub use crate::input_manager::*;
-    pub use crate::map::*;
     pub use crate::map_builder::*;
-    pub use crate::messenger::*;
+    pub use crate::resources::*;
     pub use crate::spawner::*;
     pub use crate::systems::*;
-    pub use crate::tile_render::*;
 }
 
 struct State {
@@ -46,11 +44,6 @@ fn main() -> Result<(), String> {
     let _image_context = sdl2::image::init(InitFlag::PNG | InitFlag::JPG)?;
     let video_subsystem = sdl_context.video()?;
 
-    let info = SpriteSheetInfo {
-        path: "dungeonfont.png".to_string(),
-        tile_size_pixels: 32,
-    };
-
     let mut ecs = World::new();
 
     let rows = 20;
@@ -61,9 +54,16 @@ fn main() -> Result<(), String> {
         width_tiles: cols,
     };
 
-    let renderer = TileRender::new(info, &video_subsystem, 64)?;
+    let screen_tile_size = 64;
+    let mut canvas = new_canvas(&video_subsystem, viewport, screen_tile_size)?;
+    let texture_creator = canvas.texture_creator();
 
-    ecs.insert_non_send_resource(renderer);
+    let info = SpriteSheetInfo {
+        path: "dungeonfont.png".to_string(),
+        tile_size_pixels: 32,
+    };
+
+    let tile_render = render::TileRender::new(screen_tile_size, info, &texture_creator);
     ecs.insert_resource(TurnState::AwaitingInput);
 
     let rng = &mut rand::thread_rng();
@@ -78,6 +78,12 @@ fn main() -> Result<(), String> {
     let camera = Camera::new(viewport, map_builder.player_start);
     let map = map_builder.map;
 
+    ecs.insert_resource(TileMapLayer::new(
+        camera.viewport.width_tiles as usize,
+        camera.viewport.height_tiles as usize,
+    ));
+
+    ecs.insert_resource(SpriteLayer::new());
     ecs.insert_resource(camera);
     ecs.insert_resource(InputManager::new());
     ecs.insert_resource(map);
@@ -124,9 +130,6 @@ fn main() -> Result<(), String> {
             let mut input_manager = state.ecs.resource_mut::<InputManager>();
             input_manager.update_keys(keys);
 
-            let mut renderer = state.ecs.non_send_resource_mut::<TileRender>();
-            renderer.start_batch();
-
             let turn = state.ecs.resource::<TurnState>();
 
             match *turn {
@@ -135,8 +138,18 @@ fn main() -> Result<(), String> {
                 TurnState::EnemyTurn => state.enemy_turn.run(&mut state.ecs),
             }
 
-            let mut renderer = state.ecs.non_send_resource_mut::<TileRender>();
-            renderer.end_batch();
+            canvas.set_draw_color((0, 0, 0));
+            canvas.clear();
+
+            let map_layer = state.ecs.resource::<TileMapLayer>();
+            render_map_layer(&map_layer, &mut canvas, &tile_render);
+
+            let mut sprite_layer = state.ecs.resource_mut::<SpriteLayer>();
+            render_sprite_layer(&sprite_layer, &mut canvas, &tile_render);
+
+            sprite_layer.sprites.clear();
+
+            canvas.present();
 
             last_frame = now;
         }

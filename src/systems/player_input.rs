@@ -1,13 +1,11 @@
 use bevy_ecs::{
     entity::Entity,
-    event::EventWriter,
     system::{Query, ResMut},
 };
 use sdl2::{keyboard::Keycode, rect::Point};
 
-use crate::{
-    components::prelude::Player, InputManager, Messenger, TurnState, WantsToMove, WorldPosition,
-};
+use crate::resources::*;
+use crate::{components::prelude::Player, InputManager, TurnState, WorldPosition};
 
 pub fn player_input(
     mut query: Query<(Entity, &Player, &WorldPosition)>,

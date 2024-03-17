@@ -5,7 +5,8 @@ use bevy_ecs::{
 use rand::{self, Rng};
 use sdl2::rect::Point;
 
-use crate::{Messenger, RandomMover, WantsToMove, WorldPosition};
+use crate::resources::{Messenger, WantsToMove};
+use crate::{RandomMover, WorldPosition};
 
 pub fn random_move(
     mut query: Query<(Entity, &WorldPosition, &RandomMover)>,

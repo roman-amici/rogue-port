@@ -3,7 +3,7 @@ use std::cmp::{max, min};
 use rand::{Rng, RngCore};
 use sdl2::rect::{Point, Rect};
 
-use crate::prelude::*;
+use crate::resources::*;
 
 pub struct MapBuilder {
     pub num_rooms: usize,

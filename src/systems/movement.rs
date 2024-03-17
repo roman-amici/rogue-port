@@ -1,9 +1,5 @@
-use bevy_ecs::{
-    event::EventReader,
-    system::{Query, Res, ResMut},
-};
-
-use crate::{Camera, Map, Messenger, Player, WantsToMove, WorldPosition};
+use crate::{resources::*, Player, WorldPosition};
+use bevy_ecs::system::{Query, Res, ResMut};
 
 pub fn movement(
     mut query: Query<(&mut WorldPosition, Option<&Player>)>,
