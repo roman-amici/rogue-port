@@ -41,4 +41,18 @@ impl Camera {
         self.top_y = player_position.y - half_height;
         self.bottom_y = player_position.y + half_height;
     }
+
+    pub fn worldspace_to_screenspace(&self, pos_world : Point) -> Option<Point> {
+
+        let x_screen = pos_world.x - self.left_x;
+        let y_screen = pos_world.y - self.top_y;
+
+        if x_screen > 0 && x_screen <= self.right_x &&
+            y_screen > 0 && y_screen <= self.bottom_y {
+                Some(Point::new(x_screen, y_screen))
+            }
+            else {
+                None
+            }
+    }
 }

@@ -3,10 +3,14 @@ use sdl2::{render::Canvas, video::Window, VideoSubsystem};
 use crate::resources::*;
 
 pub use self::tile_render::TileRender;
+pub use self::text_render::TextRender;
+pub use self::hud_render::HudRender;
 
 mod sprite_sheet;
 pub mod sprite_sheet_info;
 mod tile_render;
+mod text_render;
+mod hud_render;
 
 pub fn new_canvas(
     video_subsystem: &VideoSubsystem,

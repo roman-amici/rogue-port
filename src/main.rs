@@ -3,9 +3,9 @@ use std::time::Duration;
 use bevy_ecs::{schedule::Schedule, system::Resource, world::World};
 use prelude::*;
 use render::{
-    new_canvas, render_map_layer, render_sprite_layer, sprite_sheet_info::SpriteSheetInfo,
+    new_canvas, render_map_layer, render_sprite_layer, sprite_sheet_info::SpriteSheetInfo, HudRender, TextRender
 };
-use sdl2::{event::Event, image::InitFlag, keyboard::Keycode};
+use sdl2::{event::Event, image::InitFlag, keyboard::Keycode, pixels::Color, rect::Rect};
 
 mod components;
 
@@ -43,6 +43,7 @@ fn main() -> Result<(), String> {
     let sdl_context = sdl2::init()?;
     let _image_context = sdl2::image::init(InitFlag::PNG | InitFlag::JPG)?;
     let video_subsystem = sdl_context.video()?;
+    let ttf_context = sdl2::ttf::init().map_err(|e| e.to_string())?;
 
     let mut ecs = World::new();
 
@@ -54,7 +55,7 @@ fn main() -> Result<(), String> {
         width_tiles: cols,
     };
 
-    let screen_tile_size = 64;
+    let screen_tile_size = 32;
     let mut canvas = new_canvas(&video_subsystem, viewport, screen_tile_size)?;
     let texture_creator = canvas.texture_creator();
 
@@ -65,6 +66,12 @@ fn main() -> Result<(), String> {
 
     let tile_render = render::TileRender::new(screen_tile_size, info, &texture_creator);
     ecs.insert_resource(TurnState::AwaitingInput);
+
+    let mut font = ttf_context.load_font("FreeMono.ttf", screen_tile_size as u16)?;
+    font.set_style(sdl2::ttf::FontStyle::BOLD);
+
+    let mut text_render = TextRender::new();
+    let mut hud_render = HudRender::new(screen_tile_size, viewport);
 
     let rng = &mut rand::thread_rng();
     let map_builder = MapBuilder::new(
@@ -88,6 +95,7 @@ fn main() -> Result<(), String> {
     ecs.insert_resource(InputManager::new());
     ecs.insert_resource(map);
     ecs.insert_resource(Messenger::<WantsToMove>::new());
+    ecs.insert_resource(HudLayer::new());
 
     let mut state = State {
         ecs,
@@ -127,8 +135,11 @@ fn main() -> Result<(), String> {
                 .filter_map(Keycode::from_scancode)
                 .collect();
 
+            let mouse_state = event_pump.mouse_state();
+
             let mut input_manager = state.ecs.resource_mut::<InputManager>();
             input_manager.update_keys(keys);
+            input_manager.update_mouse(mouse_state.x(), mouse_state.y(), screen_tile_size);
 
             let turn = state.ecs.resource::<TurnState>();
 
@@ -148,6 +159,17 @@ fn main() -> Result<(), String> {
             render_sprite_layer(&sprite_layer, &mut canvas, &tile_render);
 
             sprite_layer.sprites.clear();
+
+            let mut hud_layer = state.ecs.resource_mut::<HudLayer>();
+            for element in hud_layer.hud_elements.iter() {
+                match element {
+                    HudElement::HealthBar { text, .. } => text_render.add_to_cache(text, Color::RGB(255,255,255), &texture_creator,  &font),
+                    HudElement::Tooltip { text, .. } => text_render.add_to_cache(text, Color::RGB(0,0,0), &texture_creator,  &font),
+                }
+            }
+
+            hud_render.render_hud_layer(&hud_layer, &mut canvas, &mut text_render);
+            hud_layer.hud_elements.clear();
 
             canvas.present();
 
