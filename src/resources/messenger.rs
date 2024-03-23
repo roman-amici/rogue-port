@@ -16,3 +16,8 @@ pub struct WantsToMove {
     pub entity: Entity,
     pub destination: Point,
 }
+
+pub struct WantsToAttack {
+    pub entity: Entity,
+    pub victim: Entity,
+}

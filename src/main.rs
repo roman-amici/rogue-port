@@ -3,7 +3,8 @@ use std::time::Duration;
 use bevy_ecs::{schedule::Schedule, system::Resource, world::World};
 use prelude::*;
 use render::{
-    new_canvas, render_map_layer, render_sprite_layer, sprite_sheet_info::SpriteSheetInfo, HudRender, TextRender
+    new_canvas, render_map_layer, render_sprite_layer, sprite_sheet_info::SpriteSheetInfo,
+    HudRender, TextRender,
 };
 use sdl2::{event::Event, image::InitFlag, keyboard::Keycode, pixels::Color, rect::Rect};
 
@@ -55,7 +56,7 @@ fn main() -> Result<(), String> {
         width_tiles: cols,
     };
 
-    let screen_tile_size = 32;
+    let screen_tile_size = 64;
     let mut canvas = new_canvas(&video_subsystem, viewport, screen_tile_size)?;
     let texture_creator = canvas.texture_creator();
 
@@ -95,6 +96,7 @@ fn main() -> Result<(), String> {
     ecs.insert_resource(InputManager::new());
     ecs.insert_resource(map);
     ecs.insert_resource(Messenger::<WantsToMove>::new());
+    ecs.insert_resource(Messenger::<WantsToAttack>::new());
     ecs.insert_resource(HudLayer::new());
 
     let mut state = State {
@@ -163,8 +165,15 @@ fn main() -> Result<(), String> {
             let mut hud_layer = state.ecs.resource_mut::<HudLayer>();
             for element in hud_layer.hud_elements.iter() {
                 match element {
-                    HudElement::HealthBar { text, .. } => text_render.add_to_cache(text, Color::RGB(255,255,255), &texture_creator,  &font),
-                    HudElement::Tooltip { text, .. } => text_render.add_to_cache(text, Color::RGB(0,0,0), &texture_creator,  &font),
+                    HudElement::HealthBar { text, .. } => text_render.add_to_cache(
+                        text,
+                        Color::RGB(255, 255, 255),
+                        &texture_creator,
+                        &font,
+                    ),
+                    HudElement::Tooltip { text, .. } => {
+                        text_render.add_to_cache(text, Color::RGB(0, 0, 0), &texture_creator, &font)
+                    }
                 }
             }
 

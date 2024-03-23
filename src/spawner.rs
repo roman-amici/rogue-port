@@ -12,26 +12,18 @@ pub fn spawn_player(ecs: &mut World, pos: WorldPosition) {
             sprite_type: SpriteType::Knight,
             color: Color::RGB(255, 255, 255),
         },
-        Health{ current : 12, max : 20}
+        Health {
+            current: 12,
+            max: 20,
+        },
     ));
 }
 
 pub fn spawn_monster(ecs: &mut World, rng: &mut dyn RngCore, point: WorldPosition) {
-    let sprite_type = match rng.gen_range(0..4) {
-        0 => SpriteType::Ogre,   // Ogre,
-        1 => SpriteType::Entin,  // Entin
-        2 => SpriteType::Daemon, // Demon?
-        _ => SpriteType::Goblin, // Goblin
+    let (sprite_type, name, hp) = match rng.gen_range(1..=10) {
+        1..=8 => (SpriteType::Goblin, "Goblin", 1),
+        _ => (SpriteType::Orc, "Orc", 2),
     };
-
-    let name = match sprite_type {
-        SpriteType::Knight => "Knight",
-        SpriteType::Ogre => "Ogre",
-        SpriteType::Entin => "Entin",
-        SpriteType::Goblin => "Goblin",
-        SpriteType::Daemon => "Daemon",
-    };
-
     ecs.spawn((
         Enemy,
         point,
@@ -40,6 +32,12 @@ pub fn spawn_monster(ecs: &mut World, rng: &mut dyn RngCore, point: WorldPositio
             sprite_type,
         },
         RandomMover,
-        Tooltip{ text : name.to_string()}
+        Tooltip {
+            text: name.to_string(),
+        },
+        Health {
+            current: hp,
+            max: hp,
+        },
     ));
 }

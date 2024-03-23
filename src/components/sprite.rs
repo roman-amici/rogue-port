@@ -1,11 +1,11 @@
 use bevy_ecs::component::Component;
 use sdl2::pixels::Color;
 
-#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Debug)]
 pub enum SpriteType {
     Knight,
     Ogre,
-    Entin,
+    Orc,
     Goblin,
     Daemon,
 }

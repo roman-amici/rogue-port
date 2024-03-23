@@ -46,8 +46,9 @@ impl<'a> TileRender<'a> {
         let mut sprite_map = BTreeMap::new();
         sprite_map.insert(SpriteType::Knight, SpriteIndex::new(0, 64));
         sprite_map.insert(SpriteType::Ogre, SpriteIndex::new(0, 69));
-        sprite_map.insert(SpriteType::Daemon, SpriteIndex::new(0, 79));
-        sprite_map.insert(SpriteType::Ogre, SpriteIndex::new(0, 111));
+        sprite_map.insert(SpriteType::Orc, SpriteIndex::new(0, 79));
+        sprite_map.insert(SpriteType::Daemon, SpriteIndex::new(0, 103));
+        sprite_map.insert(SpriteType::Goblin, SpriteIndex::new(0, 111));
 
         let sprite_sheet = SpriteSheet::new(&sprite_info, texture_creator);
 
@@ -93,11 +94,11 @@ impl<'a> TileRender<'a> {
         self.draw_tile_index(canvas, col, row, tile_loc);
     }
 
-    pub fn tile_to_screen_space(screen_tile_size : u32, row : i32, col : i32) -> Point {
-        let x = col  * screen_tile_size as i32;
+    pub fn tile_to_screen_space(screen_tile_size: u32, row: i32, col: i32) -> Point {
+        let x = col * screen_tile_size as i32;
         let y = row * screen_tile_size as i32;
 
-        Point::new(x,y)
+        Point::new(x, y)
     }
 
     fn draw_tile_index(

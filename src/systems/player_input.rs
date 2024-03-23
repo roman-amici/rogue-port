@@ -1,18 +1,24 @@
+use std::cmp::min;
+
 use bevy_ecs::{
     entity::Entity,
+    query::With,
     system::{Query, ResMut},
 };
 use sdl2::{keyboard::Keycode, rect::Point};
 
-use crate::resources::*;
-use crate::{components::prelude::Player, InputManager, TurnState, WorldPosition};
+use crate::{components::prelude::Player, Health, InputManager, TurnState, WorldPosition};
+use crate::{resources::*, Enemy};
 
 pub fn player_input(
-    mut query: Query<(Entity, &Player, &WorldPosition)>,
+    query: Query<(Entity, &WorldPosition), With<Player>>,
+    enemy_query: Query<(Entity, &Enemy, &WorldPosition)>,
+    mut health_query: Query<&mut Health, With<Player>>,
     input_manager: ResMut<InputManager>,
     mut turn_state: ResMut<TurnState>,
 
     mut move_events: ResMut<Messenger<WantsToMove>>,
+    mut attack_events: ResMut<Messenger<WantsToAttack>>,
 ) {
     let is_move = input_manager.keys.iter().any(|k| match *k {
         Keycode::Left => true,
@@ -29,6 +35,13 @@ pub fn player_input(
 
     *turn_state = TurnState::PlayerTurn;
 
+    if input_manager.keys.iter().any(|k| *k == Keycode::Space) {
+        for mut player_health in health_query.iter_mut() {
+            player_health.current = min(player_health.current + 1, player_health.max);
+        }
+        return;
+    }
+
     let delta = input_manager
         .keys
         .iter()
@@ -42,13 +55,27 @@ pub fn player_input(
         .nth(0)
         .unwrap_or(Point::new(0, 0));
 
-    for (entity, _, pos) in query.iter_mut() {
+    for (player_entity, pos) in query.iter() {
         let position: Point = (*pos).into();
         let destination = position + delta;
 
-        move_events.messages.push(WantsToMove {
-            destination,
-            entity,
-        });
+        let mut hit = false;
+        for (enemy_entity, _, enemy_pos) in enemy_query.iter() {
+            let enemy_point: Point = (*enemy_pos).into();
+            if destination == enemy_point {
+                hit = true;
+                attack_events.messages.push(WantsToAttack {
+                    entity: player_entity,
+                    victim: enemy_entity,
+                });
+            }
+        }
+
+        if !hit {
+            move_events.messages.push(WantsToMove {
+                destination,
+                entity: player_entity,
+            });
+        }
     }
 }
