@@ -31,7 +31,7 @@ pub fn spawn_monster(ecs: &mut World, rng: &mut dyn RngCore, point: WorldPositio
             color: Color::RGB(0, 0, 0),
             sprite_type,
         },
-        RandomMover,
+        ChasingPlayer{},
         Tooltip {
             text: name.to_string(),
         },

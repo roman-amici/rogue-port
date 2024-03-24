@@ -87,7 +87,10 @@ impl DijkstraMap {
             for exit in Self::exits(Point::new(col as i32, row as i32), map) {
                 if map.can_enter(exit) {
                     let index = map.map_index(exit.x as usize, exit.y as usize);
-                    self.priority_queue.push(QueueEntry { distance, index });
+                    if self.distances[index] == INFINITY {
+                        self.distances[index] = distance;
+                        self.priority_queue.push(QueueEntry { distance, index });
+                    }
                 }
             }
         }
@@ -108,7 +111,7 @@ impl DijkstraMap {
             let distance = self.distances[index];
 
             if map.can_enter(exit) {
-                if distance <= min_entry.distance {
+                if  distance <= min_entry.distance {
                     min_entry = QueueEntry { distance, index }
                 }
             }
@@ -158,11 +161,13 @@ impl DijkstraMap {
             for exit in Self::exits(entry_point, map) {
                 if map.can_enter(exit) {
                     let index = map.map_index(exit.x as usize, exit.y as usize);
-                    self.distances[index] = grid_distance;
+                    if self.distances[index] == INFINITY {
+                        self.distances[index] = grid_distance;
 
-                    let distance = grid_distance + Self::cartesian_distance(exit, end_point);
-
-                    self.priority_queue.push(QueueEntry { distance, index });
+                        let distance = grid_distance + Self::cartesian_distance(exit, end_point);
+    
+                        self.priority_queue.push(QueueEntry { distance, index });
+                    }
                 }
             }
         }

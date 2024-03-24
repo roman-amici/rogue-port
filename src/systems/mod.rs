@@ -7,6 +7,7 @@ mod player_input;
 mod random_move;
 mod sprite_render;
 mod tooltip_render;
+mod chasing_player;
 
 use bevy_ecs::schedule::{apply_deferred, IntoSystemConfigs, Schedule};
 
@@ -19,6 +20,7 @@ use self::player_input::player_input;
 use self::random_move::random_move;
 use self::sprite_render::sprite_render;
 use self::tooltip_render::tooltip;
+use self::chasing_player::chase;
 
 pub fn build_input_schedule() -> Schedule {
     let mut schedule = Schedule::default();
@@ -52,9 +54,9 @@ pub fn build_player_schedule() -> Schedule {
 
 pub fn build_enemy_schedule() -> Schedule {
     let mut schedule = Schedule::default();
-    schedule.add_systems(random_move);
-    schedule.add_systems(movement.after(random_move));
-    schedule.add_systems(combat.after(random_move));
+    schedule.add_systems(chase);
+    schedule.add_systems(movement.after(chase));
+    schedule.add_systems(combat.after(chase));
 
     schedule.add_systems(
         map_render

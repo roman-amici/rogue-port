@@ -39,52 +39,33 @@ enum TurnState {
     AwaitingInput,
     PlayerTurn,
     EnemyTurn,
+    GameEnd,
 }
 
-fn main() -> Result<(), String> {
-    let sdl_context = sdl2::init()?;
-    let _image_context = sdl2::image::init(InitFlag::PNG | InitFlag::JPG)?;
-    let video_subsystem = sdl_context.video()?;
-    let ttf_context = sdl2::ttf::init().map_err(|e| e.to_string())?;
+fn build_world(viewport : Viewport) -> State {
 
     let mut ecs = World::new();
 
-    let rows = 20;
-    let cols = 40;
-
-    let viewport = Viewport {
-        height_tiles: rows,
-        width_tiles: cols,
-    };
-
-    let screen_tile_size = 64;
-    let mut canvas = new_canvas(&video_subsystem, viewport, screen_tile_size)?;
-    let texture_creator = canvas.texture_creator();
-
-    let info = SpriteSheetInfo {
-        path: "dungeonfont.png".to_string(),
-        tile_size_pixels: 32,
-    };
-
-    let tile_render = render::TileRender::new(screen_tile_size, info, &texture_creator);
     ecs.insert_resource(TurnState::AwaitingInput);
-
-    let mut font = ttf_context.load_font("FreeMono.ttf", screen_tile_size as u16)?;
-    font.set_style(sdl2::ttf::FontStyle::BOLD);
-
-    let mut text_render = TextRender::new();
-    let mut hud_render = HudRender::new(screen_tile_size, viewport);
 
     let rng = &mut rand::thread_rng();
     let map_builder = MapBuilder::new(
-        (cols * 4) as usize,
-        (rows * 4) as usize,
+        (viewport.width_tiles * 4) as usize,
+        (viewport.height_tiles * 4) as usize,
         20,
         vec![35, 46],
         rng,
     );
 
     let camera = Camera::new(viewport, map_builder.player_start);
+    
+    map_builder
+    .rooms
+    .iter()
+    .skip(1)
+    .map(|r| r.center())
+    .for_each(|pos| spawn_monster(&mut ecs, rng, pos.into()));
+    
     let map = map_builder.map;
 
     ecs.insert_resource(TileMapLayer::new(
@@ -101,21 +82,49 @@ fn main() -> Result<(), String> {
     ecs.insert_resource(Messenger::<WantsToAttack>::new());
     ecs.insert_resource(HudLayer::new());
 
-    let mut state = State {
+    spawn_player(&mut ecs, map_builder.player_start.into());
+
+
+    State {
         ecs,
         awaiting_input: build_input_schedule(),
         player_turn: build_player_schedule(),
         enemy_turn: build_enemy_schedule(),
+    }
+}
+
+fn main() -> Result<(), String> {
+    let sdl_context = sdl2::init()?;
+    let _image_context = sdl2::image::init(InitFlag::PNG | InitFlag::JPG)?;
+    let video_subsystem = sdl_context.video()?;
+    let ttf_context = sdl2::ttf::init().map_err(|e| e.to_string())?;
+
+    let rows = 20;
+    let cols = 40;
+
+    let viewport = Viewport {
+        height_tiles: rows,
+        width_tiles: cols,
     };
 
-    spawn_player(&mut state.ecs, map_builder.player_start.into());
-    map_builder
-        .rooms
-        .iter()
-        .skip(1)
-        .map(|r| r.center())
-        .for_each(|pos| spawn_monster(&mut state.ecs, rng, pos.into()));
+    let mut state = build_world(viewport);
 
+    let screen_tile_size = 32;
+    let mut canvas = new_canvas(&video_subsystem, viewport, screen_tile_size)?;
+    let texture_creator = canvas.texture_creator();
+
+    let info = SpriteSheetInfo {
+        path: "dungeonfont.png".to_string(),
+        tile_size_pixels: 32,
+    };
+
+    let tile_render = render::TileRender::new(screen_tile_size, info, &texture_creator);
+
+    let mut font = ttf_context.load_font("FreeMono.ttf", screen_tile_size as u16)?;
+    font.set_style(sdl2::ttf::FontStyle::BOLD);
+
+    let mut text_render = TextRender::new();
+    let mut hud_render = HudRender::new(screen_tile_size, viewport);
     let mut event_pump = sdl_context.event_pump()?;
     let timers = sdl_context.timer()?;
 
@@ -151,6 +160,7 @@ fn main() -> Result<(), String> {
                 TurnState::AwaitingInput => state.awaiting_input.run(&mut state.ecs),
                 TurnState::PlayerTurn => state.player_turn.run(&mut state.ecs),
                 TurnState::EnemyTurn => state.enemy_turn.run(&mut state.ecs),
+                TurnState::GameEnd => {}
             }
 
             canvas.set_draw_color((0, 0, 0));

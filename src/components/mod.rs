@@ -5,6 +5,7 @@ mod sprite;
 mod world_position;
 mod health;
 mod tooltip;
+mod chasing_player;
 
 pub mod prelude {
     pub use super::enemy::*;
@@ -14,4 +15,5 @@ pub mod prelude {
     pub use super::world_position::*;
     pub use super::health::*;
     pub use super::tooltip::*;
+    pub use super::chasing_player::*;
 }

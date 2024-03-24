@@ -11,6 +11,7 @@ pub mod sprite_sheet_info;
 mod tile_render;
 mod text_render;
 mod hud_render;
+mod main_menu_render;
 
 pub fn new_canvas(
     video_subsystem: &VideoSubsystem,
