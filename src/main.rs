@@ -16,6 +16,7 @@ mod render;
 mod resources;
 mod spawner;
 mod systems;
+mod utilities;
 
 mod prelude {
     pub use crate::components::prelude::*;
@@ -94,6 +95,7 @@ fn main() -> Result<(), String> {
     ecs.insert_resource(SpriteLayer::new());
     ecs.insert_resource(camera);
     ecs.insert_resource(InputManager::new());
+    ecs.insert_resource(PlayerDistanceMap::new(&map));
     ecs.insert_resource(map);
     ecs.insert_resource(Messenger::<WantsToMove>::new());
     ecs.insert_resource(Messenger::<WantsToAttack>::new());

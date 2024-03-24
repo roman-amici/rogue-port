@@ -1,4 +1,3 @@
-mod collisions;
 mod combat;
 mod end_turn;
 mod health_bar_render;
@@ -11,7 +10,6 @@ mod tooltip_render;
 
 use bevy_ecs::schedule::{apply_deferred, IntoSystemConfigs, Schedule};
 
-use self::collisions::collisions;
 use self::combat::combat;
 use self::end_turn::end_turn;
 use self::health_bar_render::player_health_bar;
