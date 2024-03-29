@@ -8,6 +8,8 @@ mod random_move;
 mod sprite_render;
 mod tooltip_render;
 mod chasing_player;
+mod menu_input;
+mod menu_render;
 
 use bevy_ecs::schedule::{apply_deferred, IntoSystemConfigs, Schedule};
 
@@ -15,12 +17,13 @@ use self::combat::combat;
 use self::end_turn::end_turn;
 use self::health_bar_render::player_health_bar;
 use self::map_render::map_render;
+use self::menu_render::main_menu_render;
 use self::movement::movement;
 use self::player_input::player_input;
-use self::random_move::random_move;
 use self::sprite_render::sprite_render;
 use self::tooltip_render::tooltip;
 use self::chasing_player::chase;
+use self::menu_input::menu_input;
 
 pub fn build_input_schedule() -> Schedule {
     let mut schedule = Schedule::default();
@@ -68,6 +71,15 @@ pub fn build_enemy_schedule() -> Schedule {
     schedule.add_systems(player_health_bar.after(combat));
 
     schedule.add_systems(end_turn.after(sprite_render));
+
+    schedule
+}
+
+pub fn build_menu_schedule() -> Schedule {
+    let mut schedule = Schedule::default();
+
+    schedule.add_systems(main_menu_render);
+    schedule.add_systems(menu_input);
 
     schedule
 }

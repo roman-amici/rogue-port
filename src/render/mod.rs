@@ -5,6 +5,7 @@ use crate::resources::*;
 pub use self::tile_render::TileRender;
 pub use self::text_render::TextRender;
 pub use self::hud_render::HudRender;
+pub use self::main_menu_render::MainMenuRender;
 
 mod sprite_sheet;
 pub mod sprite_sheet_info;

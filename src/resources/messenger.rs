@@ -21,3 +21,7 @@ pub struct WantsToAttack {
     pub entity: Entity,
     pub victim: Entity,
 }
+
+pub enum SystemMessage {
+    ShouldQuit
+}

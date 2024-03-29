@@ -3,8 +3,7 @@ use std::time::Duration;
 use bevy_ecs::{schedule::Schedule, system::Resource, world::World};
 use prelude::*;
 use render::{
-    new_canvas, render_map_layer, render_sprite_layer, sprite_sheet_info::SpriteSheetInfo,
-    HudRender, TextRender,
+    new_canvas, render_map_layer, render_sprite_layer, sprite_sheet_info::SpriteSheetInfo, HudRender, MainMenuRender, TextRender
 };
 use sdl2::{event::Event, image::InitFlag, keyboard::Keycode, pixels::Color, rect::Rect};
 
@@ -32,6 +31,7 @@ struct State {
     awaiting_input: Schedule,
     player_turn: Schedule,
     enemy_turn: Schedule,
+    menu_schedule : Schedule,
 }
 
 #[derive(Resource, Copy, Clone, Debug, PartialEq)]
@@ -80,7 +80,10 @@ fn build_world(viewport : Viewport) -> State {
     ecs.insert_resource(map);
     ecs.insert_resource(Messenger::<WantsToMove>::new());
     ecs.insert_resource(Messenger::<WantsToAttack>::new());
+    ecs.insert_resource(Messenger::<SystemMessage>::new());
+    ecs.insert_resource(MainMenuLayer::new());
     ecs.insert_resource(HudLayer::new());
+    ecs.insert_resource(GameResult::New);
 
     spawn_player(&mut ecs, map_builder.player_start.into());
 
@@ -90,6 +93,7 @@ fn build_world(viewport : Viewport) -> State {
         awaiting_input: build_input_schedule(),
         player_turn: build_player_schedule(),
         enemy_turn: build_enemy_schedule(),
+        menu_schedule :  build_menu_schedule(),
     }
 }
 
@@ -108,6 +112,8 @@ fn main() -> Result<(), String> {
     };
 
     let mut state = build_world(viewport);
+    let mut turn_state = state.ecs.resource_mut::<TurnState>();
+    *turn_state = TurnState::GameEnd;
 
     let screen_tile_size = 32;
     let mut canvas = new_canvas(&video_subsystem, viewport, screen_tile_size)?;
@@ -123,8 +129,9 @@ fn main() -> Result<(), String> {
     let mut font = ttf_context.load_font("FreeMono.ttf", screen_tile_size as u16)?;
     font.set_style(sdl2::ttf::FontStyle::BOLD);
 
+    let menu_render = MainMenuRender::new((viewport.width_tiles * screen_tile_size) as i32, (viewport.height_tiles * screen_tile_size) as i32);
     let mut text_render = TextRender::new();
-    let mut hud_render = HudRender::new(screen_tile_size, viewport);
+    let hud_render = HudRender::new(screen_tile_size, viewport);
     let mut event_pump = sdl_context.event_pump()?;
     let timers = sdl_context.timer()?;
 
@@ -154,45 +161,70 @@ fn main() -> Result<(), String> {
             input_manager.update_keys(keys);
             input_manager.update_mouse(mouse_state.x(), mouse_state.y(), screen_tile_size);
 
-            let turn = state.ecs.resource::<TurnState>();
+            let turn = *state.ecs.resource::<TurnState>();
 
-            match *turn {
+            match turn {
                 TurnState::AwaitingInput => state.awaiting_input.run(&mut state.ecs),
                 TurnState::PlayerTurn => state.player_turn.run(&mut state.ecs),
                 TurnState::EnemyTurn => state.enemy_turn.run(&mut state.ecs),
-                TurnState::GameEnd => {}
+                TurnState::GameEnd => state.menu_schedule.run(&mut state.ecs),
             }
+
+            let mut system_messages = state.ecs.resource_mut::<Messenger<SystemMessage>>();
+            for message in system_messages.messages.iter() {
+                match *message {
+                    SystemMessage::ShouldQuit =>{
+                        break 'running;
+                    }
+                }
+            }
+            system_messages.messages.clear();
 
             canvas.set_draw_color((0, 0, 0));
             canvas.clear();
 
-            let map_layer = state.ecs.resource::<TileMapLayer>();
-            render_map_layer(&map_layer, &mut canvas, &tile_render);
+            if turn == TurnState::GameEnd {
+                let menu_layer = state.ecs.resource::<MainMenuLayer>();
+
+                text_render.add_to_cache(&menu_layer.title, Color::RGB(255, 255, 255), &texture_creator, &font);
+                for option in menu_layer.options.iter() {
+                    text_render.add_to_cache(option, Color::RGB(255, 255, 255), &texture_creator, &font);
+                }
+                menu_render.render_menu(&mut canvas, menu_layer, &text_render );
+            } else {
+                let map_layer = state.ecs.resource::<TileMapLayer>();
+                render_map_layer(&map_layer, &mut canvas, &tile_render);
+    
+                let sprite_layer = state.ecs.resource::<SpriteLayer>();
+                render_sprite_layer(&sprite_layer, &mut canvas, &tile_render);
+    
+                let hud_layer = state.ecs.resource::<HudLayer>();
+                for element in hud_layer.hud_elements.iter() {
+                    match element {
+                        HudElement::HealthBar { text, .. } => text_render.add_to_cache(
+                            text,
+                            Color::RGB(255, 255, 255),
+                            &texture_creator,
+                            &font,
+                        ),
+                        HudElement::Tooltip { text, .. } => {
+                            text_render.add_to_cache(text, Color::RGB(0, 0, 0), &texture_creator, &font)
+                        }
+                    }
+                }
+                hud_render.render_hud_layer(&hud_layer, &mut canvas, &mut text_render);
+            }
+
+            canvas.present();
 
             let mut sprite_layer = state.ecs.resource_mut::<SpriteLayer>();
-            render_sprite_layer(&sprite_layer, &mut canvas, &tile_render);
-
             sprite_layer.sprites.clear();
 
             let mut hud_layer = state.ecs.resource_mut::<HudLayer>();
-            for element in hud_layer.hud_elements.iter() {
-                match element {
-                    HudElement::HealthBar { text, .. } => text_render.add_to_cache(
-                        text,
-                        Color::RGB(255, 255, 255),
-                        &texture_creator,
-                        &font,
-                    ),
-                    HudElement::Tooltip { text, .. } => {
-                        text_render.add_to_cache(text, Color::RGB(0, 0, 0), &texture_creator, &font)
-                    }
-                }
-            }
-
-            hud_render.render_hud_layer(&hud_layer, &mut canvas, &mut text_render);
             hud_layer.hud_elements.clear();
 
-            canvas.present();
+            let mut menu_layer = state.ecs.resource_mut::<MainMenuLayer>();
+            menu_layer.options.clear();
 
             last_frame = now;
         }
