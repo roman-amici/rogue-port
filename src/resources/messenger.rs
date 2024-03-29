@@ -23,5 +23,6 @@ pub struct WantsToAttack {
 }
 
 pub enum SystemMessage {
-    ShouldQuit
+    ShouldQuit,
+    NewGame,
 }

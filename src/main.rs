@@ -67,6 +67,11 @@ fn build_world(viewport : Viewport) -> State {
     .for_each(|pos| spawn_monster(&mut ecs, rng, pos.into()));
     
     let map = map_builder.map;
+    let mut distance_map = PlayerDistanceMap::new(&map);
+    distance_map.fill(map_builder.player_start.into(), &map);
+
+    let max_distance_tile = distance_map.max_distance_tile();
+    spawn_amulet(&mut ecs, max_distance_tile);
 
     ecs.insert_resource(TileMapLayer::new(
         camera.viewport.width_tiles as usize,
@@ -76,7 +81,7 @@ fn build_world(viewport : Viewport) -> State {
     ecs.insert_resource(SpriteLayer::new());
     ecs.insert_resource(camera);
     ecs.insert_resource(InputManager::new());
-    ecs.insert_resource(PlayerDistanceMap::new(&map));
+    ecs.insert_resource(distance_map);
     ecs.insert_resource(map);
     ecs.insert_resource(Messenger::<WantsToMove>::new());
     ecs.insert_resource(Messenger::<WantsToAttack>::new());
@@ -86,7 +91,6 @@ fn build_world(viewport : Viewport) -> State {
     ecs.insert_resource(GameResult::New);
 
     spawn_player(&mut ecs, map_builder.player_start.into());
-
 
     State {
         ecs,
@@ -171,14 +175,18 @@ fn main() -> Result<(), String> {
             }
 
             let mut system_messages = state.ecs.resource_mut::<Messenger<SystemMessage>>();
-            for message in system_messages.messages.iter() {
-                match *message {
+            let messages : Vec<SystemMessage> = system_messages.messages.drain(..).collect();
+            for message in messages {
+                match message {
                     SystemMessage::ShouldQuit =>{
                         break 'running;
                     }
+                    SystemMessage::NewGame => {
+                        state = build_world(viewport);
+                        continue 'running;
+                    }
                 }
             }
-            system_messages.messages.clear();
 
             canvas.set_draw_color((0, 0, 0));
             canvas.clear();

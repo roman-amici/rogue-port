@@ -49,6 +49,7 @@ impl<'a> TileRender<'a> {
         sprite_map.insert(SpriteType::Orc, SpriteIndex::new(0, 79));
         sprite_map.insert(SpriteType::Daemon, SpriteIndex::new(0, 103));
         sprite_map.insert(SpriteType::Goblin, SpriteIndex::new(0, 111));
+        sprite_map.insert(SpriteType::Amulet, SpriteIndex::new(0,124));
 
         let sprite_sheet = SpriteSheet::new(&sprite_info, texture_creator);
 

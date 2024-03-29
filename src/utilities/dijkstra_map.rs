@@ -174,4 +174,21 @@ impl DijkstraMap {
 
         false
     }
+
+    pub fn max_distance_tile(&self) -> Point {
+        let mut max_distance = 0.0;
+        let mut max_index = 0;
+
+        for (index, distance) in self.distances.iter().enumerate() {
+            if *distance < INFINITY && *distance > max_distance {
+                max_distance = *distance;
+                max_index = index;
+            }
+        }
+
+        let x = max_index % self.cols;
+        let y = max_index / self.cols;
+
+        Point::new(x as i32, y as i32)
+    }
 }

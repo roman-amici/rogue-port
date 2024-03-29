@@ -41,3 +41,19 @@ pub fn spawn_monster(ecs: &mut World, rng: &mut dyn RngCore, point: WorldPositio
         },
     ));
 }
+
+pub fn spawn_amulet(ecs : &mut World, pos : WorldPosition) {
+    ecs.spawn((
+        Item{
+            item_type : ItemType::Amulet
+        },
+        Tooltip {
+            text : "Amulet!".to_string(),
+        },
+        Sprite {
+            color : Color::RGB(0, 0, 0),
+            sprite_type : SpriteType::Amulet,
+        },
+        pos
+    ));
+}

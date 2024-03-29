@@ -28,4 +28,8 @@ impl PlayerDistanceMap {
             map,
         )
     }
+
+    pub fn max_distance_tile(&self) -> WorldPosition {
+        self.dijkstra_map.max_distance_tile().into()
+    }
 }

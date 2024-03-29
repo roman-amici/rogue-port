@@ -6,6 +6,7 @@ mod world_position;
 mod health;
 mod tooltip;
 mod chasing_player;
+mod item;
 
 pub mod prelude {
     pub use super::enemy::*;
@@ -16,4 +17,5 @@ pub mod prelude {
     pub use super::health::*;
     pub use super::tooltip::*;
     pub use super::chasing_player::*;
+    pub use super::item::*;
 }

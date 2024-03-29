@@ -1,17 +1,15 @@
-use bevy_ecs::{query::With, system::{Query, ResMut}};
+use bevy_ecs::system::{Res, ResMut};
 
-use crate::{Health, Player, TurnState};
+use crate::{GameResult, TurnState};
 
 pub fn end_turn(
-    player_health_query : Query<&Health, With<Player>>,
-    mut turn_state: ResMut<TurnState>) {
+    mut turn_state: ResMut<TurnState>,
+    game_result : Res<GameResult>) {
 
-        for health in player_health_query.iter() {
-
-            if health.current <= 0 {
-                *turn_state = TurnState::GameEnd;
-            }
-        }
+    if *game_result != GameResult::New {
+        *turn_state = TurnState::GameEnd;
+        return;
+    }
 
     let new_state = match *turn_state {
         TurnState::AwaitingInput => return,

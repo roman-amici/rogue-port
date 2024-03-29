@@ -10,6 +10,7 @@ mod tooltip_render;
 mod chasing_player;
 mod menu_input;
 mod menu_render;
+mod game_over;
 
 use bevy_ecs::schedule::{apply_deferred, IntoSystemConfigs, Schedule};
 
@@ -24,6 +25,7 @@ use self::sprite_render::sprite_render;
 use self::tooltip_render::tooltip;
 use self::chasing_player::chase;
 use self::menu_input::menu_input;
+use self::game_over::check_game_over;
 
 pub fn build_input_schedule() -> Schedule {
     let mut schedule = Schedule::default();
@@ -43,6 +45,7 @@ pub fn build_player_schedule() -> Schedule {
     schedule.add_systems(combat);
 
     schedule.add_systems(apply_deferred.after(combat).after(movement));
+    schedule.add_systems(check_game_over.after(combat).after(movement));
 
     schedule.add_systems(map_render.before(sprite_render).after(apply_deferred));
     schedule.add_systems(sprite_render.after(apply_deferred));
@@ -60,6 +63,7 @@ pub fn build_enemy_schedule() -> Schedule {
     schedule.add_systems(chase);
     schedule.add_systems(movement.after(chase));
     schedule.add_systems(combat.after(chase));
+    schedule.add_systems(check_game_over.after(combat).after(movement));
 
     schedule.add_systems(
         map_render

@@ -8,6 +8,7 @@ pub enum SpriteType {
     Orc,
     Goblin,
     Daemon,
+    Amulet
 }
 
 #[derive(Component)]
