@@ -1,8 +1,5 @@
 use sdl2::{
-    image::LoadTexture,
-    rect::Rect,
-    render::{Canvas, Texture, TextureCreator},
-    video::{Window, WindowContext},
+    image::LoadTexture, pixels::Color, rect::Rect, render::{Canvas, Texture, TextureCreator}, video::{Window, WindowContext}
 };
 
 use super::sprite_sheet_info::SpriteSheetInfo;
@@ -33,10 +30,12 @@ impl<'a> SpriteSheet<'a> {
         }
     }
 
-    pub fn render_index(&self, canvas: &mut Canvas<Window>, tile_index: usize, dest: Rect) {
+    pub fn render_index(&mut self, canvas: &mut Canvas<Window>, tile_index: usize, dest: Rect, color : Color ) {
         let xth = (tile_index % self.cols) as u32;
         let yth = (tile_index / self.cols) as u32;
 
+        self.texture.set_color_mod(color.r, color.g, color.b);
+        self.texture.set_alpha_mod(color.a);
         canvas
             .copy(
                 &self.texture,

@@ -53,7 +53,6 @@ fn build_world(viewport : Viewport) -> State {
         (viewport.width_tiles * 4) as usize,
         (viewport.height_tiles * 4) as usize,
         20,
-        vec![35, 46],
         rng,
     );
 
@@ -128,7 +127,7 @@ fn main() -> Result<(), String> {
         tile_size_pixels: 32,
     };
 
-    let tile_render = render::TileRender::new(screen_tile_size, info, &texture_creator);
+    let mut tile_render = render::TileRender::new(screen_tile_size, info, &texture_creator);
 
     let mut font = ttf_context.load_font("FreeMono.ttf", screen_tile_size as u16)?;
     font.set_style(sdl2::ttf::FontStyle::BOLD);
@@ -201,10 +200,10 @@ fn main() -> Result<(), String> {
                 menu_render.render_menu(&mut canvas, menu_layer, &text_render );
             } else {
                 let map_layer = state.ecs.resource::<TileMapLayer>();
-                render_map_layer(&map_layer, &mut canvas, &tile_render);
+                render_map_layer(&map_layer, &mut canvas, &mut tile_render);
     
                 let sprite_layer = state.ecs.resource::<SpriteLayer>();
-                render_sprite_layer(&sprite_layer, &mut canvas, &tile_render);
+                render_sprite_layer(&sprite_layer, &mut canvas, &mut tile_render);
     
                 let hud_layer = state.ecs.resource::<HudLayer>();
                 for element in hud_layer.hud_elements.iter() {

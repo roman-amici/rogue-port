@@ -1,5 +1,5 @@
 use bevy_ecs::system::Resource;
-use sdl2::{render::Canvas, video::Window};
+use sdl2::{pixels::Color, render::Canvas, video::Window};
 
 use crate::resources::map::TileType;
 
@@ -7,7 +7,7 @@ use crate::resources::map::TileType;
 pub struct TileMapLayer {
     pub width: usize,
     pub height: usize,
-    pub tiles: Vec<TileType>,
+    pub tiles: Vec<(Color,TileType)>,
 }
 
 impl TileMapLayer {
@@ -15,14 +15,14 @@ impl TileMapLayer {
         Self {
             width,
             height,
-            tiles: vec![TileType::Wall; width * height],
+            tiles: vec![ (Color::RGB(0,0,0),TileType::Wall); width * height],
         }
     }
 
-    pub fn set(&mut self, col: usize, row: usize, tile: TileType) {
+    pub fn set(&mut self, col: usize, row: usize, tile: TileType, color : Color ) {
         let index = row * self.width + col;
 
-        self.tiles[index] = tile;
+        self.tiles[index] = (color,tile);
     }
 
     pub fn get_index(&self, col: usize, row: usize) -> usize {

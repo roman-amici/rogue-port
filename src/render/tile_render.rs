@@ -1,9 +1,7 @@
 use std::collections::BTreeMap;
 
 use sdl2::{
-    rect::{Point, Rect},
-    render::{Canvas, TextureCreator},
-    video::{Window, WindowContext},
+    pixels::Color, rect::{Point, Rect}, render::{Canvas, TextureCreator}, video::{Window, WindowContext}
 };
 
 use crate::resources::*;
@@ -62,10 +60,11 @@ impl<'a> TileRender<'a> {
     }
 
     pub fn draw_tile(
-        &self,
+        &mut self,
         canvas: &mut Canvas<Window>,
         col: usize,
         row: usize,
+        color : Color,
         tile_type: TileType,
     ) {
         let tile_loc = self
@@ -75,11 +74,11 @@ impl<'a> TileRender<'a> {
             .map(|opt| *opt)
             .unwrap_or(SpriteIndex::new(0, 0));
 
-        self.draw_tile_index(canvas, col, row, tile_loc)
+        self.draw_tile_index(canvas, col, row, tile_loc, color)
     }
 
     pub fn draw_sprite(
-        &self,
+        &mut self,
         canvas: &mut Canvas<Window>,
         col: usize,
         row: usize,
@@ -92,7 +91,7 @@ impl<'a> TileRender<'a> {
             .map(|opt| *opt)
             .unwrap_or(SpriteIndex::new(0, 0));
 
-        self.draw_tile_index(canvas, col, row, tile_loc);
+        self.draw_tile_index(canvas, col, row, tile_loc, Color::RGB(255, 255, 255));
     }
 
     pub fn tile_to_screen_space(screen_tile_size: u32, row: i32, col: i32) -> Point {
@@ -103,11 +102,12 @@ impl<'a> TileRender<'a> {
     }
 
     fn draw_tile_index(
-        &self,
+        &mut self,
         canvas: &mut Canvas<Window>,
         col: usize,
         row: usize,
         location: SpriteIndex,
+        color : Color
     ) {
         let x = col as u32 * self.screen_tile_size;
         let y = row as u32 * self.screen_tile_size;
@@ -121,6 +121,7 @@ impl<'a> TileRender<'a> {
                 self.screen_tile_size,
                 self.screen_tile_size,
             ),
+            color
         );
     }
 }

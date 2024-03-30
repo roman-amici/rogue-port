@@ -11,6 +11,7 @@ mod chasing_player;
 mod menu_input;
 mod menu_render;
 mod game_over;
+mod fov;
 
 use bevy_ecs::schedule::{apply_deferred, IntoSystemConfigs, Schedule};
 
@@ -26,12 +27,14 @@ use self::tooltip_render::tooltip;
 use self::chasing_player::chase;
 use self::menu_input::menu_input;
 use self::game_over::check_game_over;
+use self::fov::fov;
 
 pub fn build_input_schedule() -> Schedule {
     let mut schedule = Schedule::default();
     schedule.add_systems(player_input);
+    schedule.add_systems(fov.after(player_input));
 
-    schedule.add_systems(map_render.before(sprite_render).after(player_input));
+    schedule.add_systems(map_render.before(sprite_render).after(fov));
     schedule.add_systems(sprite_render);
     schedule.add_systems(player_health_bar);
     schedule.add_systems(tooltip);
@@ -43,6 +46,8 @@ pub fn build_player_schedule() -> Schedule {
     let mut schedule = Schedule::default();
     schedule.add_systems(movement);
     schedule.add_systems(combat);
+    schedule.add_systems(fov.after(combat).before(map_render));
+
 
     schedule.add_systems(apply_deferred.after(combat).after(movement));
     schedule.add_systems(check_game_over.after(combat).after(movement));
@@ -64,6 +69,7 @@ pub fn build_enemy_schedule() -> Schedule {
     schedule.add_systems(movement.after(chase));
     schedule.add_systems(combat.after(chase));
     schedule.add_systems(check_game_over.after(combat).after(movement));
+    schedule.add_systems(fov.after(combat).before(map_render));
 
     schedule.add_systems(
         map_render

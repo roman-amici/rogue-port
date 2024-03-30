@@ -17,11 +17,10 @@ impl MapBuilder {
         width_tiles: usize,
         height_tiles: usize,
         num_rooms: usize,
-        tile_map: Vec<usize>,
         rng: &mut dyn RngCore,
     ) -> Self {
         let mut builder = MapBuilder {
-            map: Map::new(width_tiles, height_tiles, tile_map),
+            map: Map::new(width_tiles, height_tiles),
             rooms: vec![],
             player_start: Point::new(0, 0),
             num_rooms,

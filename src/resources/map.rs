@@ -13,16 +13,16 @@ pub struct Map {
     pub height_tiles: usize,
 
     pub tiles: Vec<TileType>,
-    pub tile_map: Vec<usize>,
+    pub revealed_tiles : Vec<bool>,
 }
 
 impl Map {
-    pub fn new(width_tiles: usize, height_tiles: usize, tile_map: Vec<usize>) -> Self {
+    pub fn new(width_tiles: usize, height_tiles: usize) -> Self {
         Self {
             width_tiles,
             height_tiles,
             tiles: vec![TileType::Wall; width_tiles * height_tiles],
-            tile_map,
+            revealed_tiles : vec![false; width_tiles * height_tiles],
         }
     }
 
@@ -55,5 +55,9 @@ impl Map {
     pub fn can_enter(&self, point: Point) -> bool {
         self.in_bounds(point)
             && self.tiles[self.map_index(point.x as usize, point.y as usize)] == TileType::Floor
+    }
+
+    pub fn is_opaque(&self, idx : usize) -> bool {
+        self.tiles[idx] != TileType::Floor
     }
 }

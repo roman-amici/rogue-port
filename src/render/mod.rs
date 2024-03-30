@@ -38,12 +38,13 @@ pub fn new_canvas(
 pub fn render_map_layer(
     screen_tiles: &TileMapLayer,
     canvas: &mut Canvas<Window>,
-    tile_render: &TileRender,
+    tile_render: &mut TileRender,
 ) {
     for row in 0..screen_tiles.height {
         for col in 0..screen_tiles.width {
             let index = screen_tiles.get_index(col, row);
-            tile_render.draw_tile(canvas, col, row, screen_tiles.tiles[index])
+            let (color, tile_type) = screen_tiles.tiles[index];
+            tile_render.draw_tile(canvas, col, row, color, tile_type)
         }
     }
 }
@@ -51,7 +52,7 @@ pub fn render_map_layer(
 pub fn render_sprite_layer(
     sprite_layer: &SpriteLayer,
     canvas: &mut Canvas<Window>,
-    tile_render: &TileRender,
+    tile_render: &mut TileRender,
 ) {
     for s in sprite_layer.sprites.iter() {
         tile_render.draw_sprite(canvas, s.col, s.row, s.sprite_type);
