@@ -12,6 +12,8 @@ mod menu_input;
 mod menu_render;
 mod game_over;
 mod fov;
+mod pickup_item;
+mod inventory_render;
 
 use bevy_ecs::schedule::{apply_deferred, IntoSystemConfigs, Schedule};
 
@@ -28,6 +30,8 @@ use self::chasing_player::chase;
 use self::menu_input::menu_input;
 use self::game_over::check_game_over;
 use self::fov::fov;
+use self::pickup_item::pickup_item;
+use self::inventory_render::inventory_render;
 
 pub fn build_input_schedule() -> Schedule {
     let mut schedule = Schedule::default();
@@ -38,6 +42,7 @@ pub fn build_input_schedule() -> Schedule {
     schedule.add_systems(sprite_render);
     schedule.add_systems(player_health_bar);
     schedule.add_systems(tooltip);
+    schedule.add_systems(inventory_render);
 
     schedule
 }
@@ -46,8 +51,8 @@ pub fn build_player_schedule() -> Schedule {
     let mut schedule = Schedule::default();
     schedule.add_systems(movement);
     schedule.add_systems(combat);
+    schedule.add_systems(pickup_item.after(movement));
     schedule.add_systems(fov.after(combat).before(map_render));
-
 
     schedule.add_systems(apply_deferred.after(combat).after(movement));
     schedule.add_systems(check_game_over.after(combat).after(movement));
@@ -55,6 +60,7 @@ pub fn build_player_schedule() -> Schedule {
     schedule.add_systems(map_render.before(sprite_render).after(apply_deferred));
     schedule.add_systems(sprite_render.after(apply_deferred));
     schedule.add_systems(player_health_bar.after(combat));
+    schedule.add_systems(inventory_render.after(apply_deferred));
 
     schedule.add_systems(end_turn.after(sprite_render));
 
@@ -79,6 +85,7 @@ pub fn build_enemy_schedule() -> Schedule {
     );
     schedule.add_systems(sprite_render);
     schedule.add_systems(player_health_bar.after(combat));
+    schedule.add_systems(inventory_render.after(apply_deferred));
 
     schedule.add_systems(end_turn.after(sprite_render));
 

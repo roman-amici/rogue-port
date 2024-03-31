@@ -8,6 +8,9 @@ mod tooltip;
 mod chasing_player;
 mod item;
 mod field_of_view;
+mod carrying;
+mod provides_healing;
+mod provides_dungeon_map;
 
 pub mod prelude {
     pub use super::enemy::*;
@@ -20,4 +23,8 @@ pub mod prelude {
     pub use super::chasing_player::*;
     pub use super::item::*;
     pub use super::field_of_view::*;
+    pub use super::carrying::*;
+    pub use super::provides_healing::*;
+    pub use super::provides_dungeon_map::*;
+
 }

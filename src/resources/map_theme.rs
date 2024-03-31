@@ -6,7 +6,7 @@ use sdl2::pixels::Color;
 
 use crate::{SpriteType, TileType};
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 pub struct SpriteIndex {
     pub tile_index: usize,
     pub sprite_sheet_index: usize,
@@ -49,6 +49,8 @@ impl MapTheme {
         sprite_map.insert(SpriteType::Daemon, SpriteIndex::new(0, 103));
         sprite_map.insert(SpriteType::Goblin, SpriteIndex::new(0, 111));
         sprite_map.insert(SpriteType::Amulet, SpriteIndex::new(0,124));
+        sprite_map.insert(SpriteType::Potion, SpriteIndex::new(0, 33));
+        sprite_map.insert(SpriteType::Map, SpriteIndex::new(0, 123));
 
         sprite_map
     }

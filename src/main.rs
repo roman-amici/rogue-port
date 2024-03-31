@@ -72,6 +72,7 @@ fn build_world(viewport: Viewport) -> State {
         camera.viewport.height_tiles as usize,
     ));
 
+    ecs.insert_resource(AddOrder::new());
     ecs.insert_resource(MapTheme::random_theme(rng));
     ecs.insert_resource(SpriteLayer::new());
     ecs.insert_resource(camera);
@@ -229,9 +230,10 @@ fn main() -> Result<(), String> {
                             &texture_creator,
                             &font,
                         ),
+                        _ => {}
                     }
                 }
-                hud_render.render_hud_layer(&hud_layer, &mut canvas, &mut text_render);
+                hud_render.render_hud_layer(&hud_layer, &mut canvas, &mut text_render, &mut tile_render);
             }
 
             canvas.present();

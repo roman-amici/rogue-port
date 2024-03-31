@@ -8,6 +8,7 @@ mod tile_map_layer;
 mod main_menu_layer;
 mod game_result;
 mod map_theme;
+mod add_order;
 
 pub use camera::*;
 pub use hud_layer::*;
@@ -19,3 +20,4 @@ pub use tile_map_layer::*;
 pub use main_menu_layer::*;
 pub use game_result::*;
 pub use map_theme::*;
+pub use add_order::*;

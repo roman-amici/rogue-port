@@ -1,6 +1,6 @@
 use sdl2::{rect::{Point, Rect}, render::Canvas, video::Window};
 
-use crate::{HudElement, HudLayer, Viewport};
+use crate::{HudElement, HudLayer, SpriteIndex, Viewport};
 
 use super::{TextRender, TileRender};
 
@@ -27,6 +27,7 @@ impl HudRender {
         hud_layer : &HudLayer,
         canvas : &mut Canvas<Window>,
         text_render : &mut TextRender,
+        tile_render : &mut TileRender
     ) {
         let mut used_text = vec![];
         for element in hud_layer.hud_elements.iter() {
@@ -41,10 +42,17 @@ impl HudRender {
                     used_text.push(text.clone());
 
                     self.render_healthbar(*fraction, text, canvas, text_render);
-                } 
+                }
+                HudElement::Inventory { items } => {
+                    self.render_inventory(items, canvas, text_render, tile_render);
+                }
             }
 
         }
+    }
+
+    fn screen_width(&self) -> u32 {
+        self.viewport.width_tiles * self.tile_screen_size
     }
 
     fn text_dimensions(height : i32, text : &str, text_render : & TextRender ) -> Point {
@@ -71,7 +79,7 @@ impl HudRender {
         let text_box = Self::center_x(&text_dimensions, Point::new(center_x, tile_start.y));
 
         canvas.set_draw_color((255, 255, 0 ));
-        canvas.fill_rect(text_box).expect("failed to render rect.");
+        canvas.fill_rect(text_box).expect("failed to rsprite_indexender rect.");
 
         text_render.render_text_in_cache(text, text_box, canvas);
     }
@@ -83,7 +91,7 @@ impl HudRender {
         let text_box = Self::center_x(&text_dimensions, Point::new(center_x as i32, 0));
 
         // Draw back color
-        let screen_width = self.viewport.width_tiles * self.tile_screen_size;
+        let screen_width = self.screen_width();
         canvas.set_draw_color((128, 0, 32));
         canvas.fill_rect(Rect::new(0,0, screen_width, self.health_bar_height as u32)).expect("Failed to draw healthbar");
 
@@ -92,6 +100,21 @@ impl HudRender {
         canvas.fill_rect(Rect::new(0, 0, colored_width, text_box.height())).expect("Failed to draw healthbar");
 
         text_render.render_text_in_cache(text, text_box, canvas);
+    }
+
+    fn render_inventory(&self, items : &[SpriteIndex],  canvas : &mut Canvas<Window>, text_render : & TextRender, tile_render : &mut TileRender) {
+        let inventory_start = self.health_bar_height;
+
+        canvas.set_draw_color((255, 87, 51 ));
+        
+        canvas.fill_rect(Rect::new(0, inventory_start, self.screen_width(), self.tile_screen_size )).expect("Fill.");
+
+        let mut point = Point::new(0, inventory_start);
+        for item in items.iter() {
+            tile_render.draw_tile_point(canvas, *item, point);
+            point.x += self.tile_screen_size as i32;
+        }
+
     }
 }
 

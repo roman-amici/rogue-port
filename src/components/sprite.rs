@@ -8,10 +8,12 @@ pub enum SpriteType {
     Orc,
     Goblin,
     Daemon,
-    Amulet
+    Amulet,
+    Potion,
+    Map,
 }
 
-#[derive(Component)]
+#[derive(Component, Copy,Clone)]
 pub struct Sprite {
     pub sprite_type: SpriteType,
     pub color: Color,

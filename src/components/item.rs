@@ -2,7 +2,9 @@ use bevy_ecs::component::Component;
 
 #[derive(Copy,Clone,Debug, PartialEq, Eq)]
 pub enum ItemType {
-    Amulet
+    Amulet,
+    Potion,
+    Map,
 }
 
 #[derive(Copy,Clone,Component)]

@@ -80,4 +80,21 @@ impl<'a> TileRender<'a> {
             color
         );
     }
+
+    pub fn draw_tile_point(
+        &mut self,
+        canvas: &mut Canvas<Window>,
+        index : SpriteIndex,
+        point : Point,
+    ){
+        self.sprite_sheets[index.sprite_sheet_index].render_index(
+            canvas, 
+            index.tile_index, 
+            Rect::new(
+                point.x,
+                point.y,
+                self.screen_tile_size,
+                self.screen_tile_size
+            ), Color::RGB(255, 255, 255));
+    }
 }
