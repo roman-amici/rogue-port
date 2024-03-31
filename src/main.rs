@@ -3,7 +3,8 @@ use std::time::Duration;
 use bevy_ecs::{schedule::Schedule, system::Resource, world::World};
 use prelude::*;
 use render::{
-    new_canvas, render_map_layer, render_sprite_layer, sprite_sheet_info::SpriteSheetInfo, HudRender, MainMenuRender, TextRender
+    new_canvas, render_map_layer, render_sprite_layer, sprite_sheet_info::SpriteSheetInfo,
+    HudRender, MainMenuRender, TextRender,
 };
 use sdl2::{event::Event, image::InitFlag, keyboard::Keycode, pixels::Color, rect::Rect};
 
@@ -31,7 +32,7 @@ struct State {
     awaiting_input: Schedule,
     player_turn: Schedule,
     enemy_turn: Schedule,
-    menu_schedule : Schedule,
+    menu_schedule: Schedule,
 }
 
 #[derive(Resource, Copy, Clone, Debug, PartialEq)]
@@ -42,35 +43,29 @@ enum TurnState {
     GameEnd,
 }
 
-fn build_world(viewport : Viewport) -> State {
-
+fn build_world(viewport: Viewport) -> State {
     let mut ecs = World::new();
 
     ecs.insert_resource(TurnState::AwaitingInput);
 
     let rng = &mut rand::thread_rng();
-    let map_builder = MapBuilder::new(
+    let mut map_arch = random_architect(rng);
+    let map_builder = map_arch.new(
         (viewport.width_tiles * 4) as usize,
         (viewport.height_tiles * 4) as usize,
-        20,
         rng,
     );
 
     let camera = Camera::new(viewport, map_builder.player_start);
-    
-    map_builder
-    .rooms
-    .iter()
-    .skip(1)
-    .map(|r| r.center())
-    .for_each(|pos| spawn_monster(&mut ecs, rng, pos.into()));
-    
-    let map = map_builder.map;
-    let mut distance_map = PlayerDistanceMap::new(&map);
-    distance_map.fill(map_builder.player_start.into(), &map);
 
-    let max_distance_tile = distance_map.max_distance_tile();
-    spawn_amulet(&mut ecs, max_distance_tile);
+    map_builder
+        .monster_spawn
+        .iter()
+        .for_each(|pos| spawn_monster(&mut ecs, rng, (*pos).into()));
+
+    let map = map_builder.map;
+
+    spawn_amulet(&mut ecs, map_builder.amulet_start.into());
 
     ecs.insert_resource(TileMapLayer::new(
         camera.viewport.width_tiles as usize,
@@ -80,7 +75,7 @@ fn build_world(viewport : Viewport) -> State {
     ecs.insert_resource(SpriteLayer::new());
     ecs.insert_resource(camera);
     ecs.insert_resource(InputManager::new());
-    ecs.insert_resource(distance_map);
+    ecs.insert_resource(PlayerDistanceMap::new(&map));
     ecs.insert_resource(map);
     ecs.insert_resource(Messenger::<WantsToMove>::new());
     ecs.insert_resource(Messenger::<WantsToAttack>::new());
@@ -96,7 +91,7 @@ fn build_world(viewport : Viewport) -> State {
         awaiting_input: build_input_schedule(),
         player_turn: build_player_schedule(),
         enemy_turn: build_enemy_schedule(),
-        menu_schedule :  build_menu_schedule(),
+        menu_schedule: build_menu_schedule(),
     }
 }
 
@@ -132,7 +127,10 @@ fn main() -> Result<(), String> {
     let mut font = ttf_context.load_font("FreeMono.ttf", screen_tile_size as u16)?;
     font.set_style(sdl2::ttf::FontStyle::BOLD);
 
-    let menu_render = MainMenuRender::new((viewport.width_tiles * screen_tile_size) as i32, (viewport.height_tiles * screen_tile_size) as i32);
+    let menu_render = MainMenuRender::new(
+        (viewport.width_tiles * screen_tile_size) as i32,
+        (viewport.height_tiles * screen_tile_size) as i32,
+    );
     let mut text_render = TextRender::new();
     let hud_render = HudRender::new(screen_tile_size, viewport);
     let mut event_pump = sdl_context.event_pump()?;
@@ -174,10 +172,10 @@ fn main() -> Result<(), String> {
             }
 
             let mut system_messages = state.ecs.resource_mut::<Messenger<SystemMessage>>();
-            let messages : Vec<SystemMessage> = system_messages.messages.drain(..).collect();
+            let messages: Vec<SystemMessage> = system_messages.messages.drain(..).collect();
             for message in messages {
                 match message {
-                    SystemMessage::ShouldQuit =>{
+                    SystemMessage::ShouldQuit => {
                         break 'running;
                     }
                     SystemMessage::NewGame => {
@@ -193,18 +191,28 @@ fn main() -> Result<(), String> {
             if turn == TurnState::GameEnd {
                 let menu_layer = state.ecs.resource::<MainMenuLayer>();
 
-                text_render.add_to_cache(&menu_layer.title, Color::RGB(255, 255, 255), &texture_creator, &font);
+                text_render.add_to_cache(
+                    &menu_layer.title,
+                    Color::RGB(255, 255, 255),
+                    &texture_creator,
+                    &font,
+                );
                 for option in menu_layer.options.iter() {
-                    text_render.add_to_cache(option, Color::RGB(255, 255, 255), &texture_creator, &font);
+                    text_render.add_to_cache(
+                        option,
+                        Color::RGB(255, 255, 255),
+                        &texture_creator,
+                        &font,
+                    );
                 }
-                menu_render.render_menu(&mut canvas, menu_layer, &text_render );
+                menu_render.render_menu(&mut canvas, menu_layer, &text_render);
             } else {
                 let map_layer = state.ecs.resource::<TileMapLayer>();
                 render_map_layer(&map_layer, &mut canvas, &mut tile_render);
-    
+
                 let sprite_layer = state.ecs.resource::<SpriteLayer>();
                 render_sprite_layer(&sprite_layer, &mut canvas, &mut tile_render);
-    
+
                 let hud_layer = state.ecs.resource::<HudLayer>();
                 for element in hud_layer.hud_elements.iter() {
                     match element {
@@ -214,9 +222,12 @@ fn main() -> Result<(), String> {
                             &texture_creator,
                             &font,
                         ),
-                        HudElement::Tooltip { text, .. } => {
-                            text_render.add_to_cache(text, Color::RGB(0, 0, 0), &texture_creator, &font)
-                        }
+                        HudElement::Tooltip { text, .. } => text_render.add_to_cache(
+                            text,
+                            Color::RGB(0, 0, 0),
+                            &texture_creator,
+                            &font,
+                        ),
                     }
                 }
                 hud_render.render_hud_layer(&hud_layer, &mut canvas, &mut text_render);

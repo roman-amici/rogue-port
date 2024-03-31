@@ -4,6 +4,8 @@ use sdl2::rect::Point;
 
 use crate::Map;
 
+use super::point_utils::cartesian_distance;
+
 struct QueueEntry {
     distance: f32,
     index: usize,
@@ -63,11 +65,6 @@ impl DijkstraMap {
         ]
     }
 
-    fn cartesian_distance(p1: Point, p2: Point) -> f32 {
-        let diff = p1 - p2;
-        f32::sqrt((diff.x * diff.x + diff.y * diff.y) as f32)
-    }
-
     pub fn fill_all(&mut self, (start_col, start_row): (usize, usize), map: &Map) {
         self.reset();
 
@@ -111,7 +108,7 @@ impl DijkstraMap {
             let distance = self.distances[index];
 
             if map.can_enter(exit) {
-                if  distance <= min_entry.distance {
+                if distance <= min_entry.distance {
                     min_entry = QueueEntry { distance, index }
                 }
             }
@@ -164,8 +161,8 @@ impl DijkstraMap {
                     if self.distances[index] == INFINITY {
                         self.distances[index] = grid_distance;
 
-                        let distance = grid_distance + Self::cartesian_distance(exit, end_point);
-    
+                        let distance = grid_distance + cartesian_distance(exit, end_point);
+
                         self.priority_queue.push(QueueEntry { distance, index });
                     }
                 }

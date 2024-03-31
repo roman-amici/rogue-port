@@ -13,7 +13,7 @@ pub struct Map {
     pub height_tiles: usize,
 
     pub tiles: Vec<TileType>,
-    pub revealed_tiles : Vec<bool>,
+    pub revealed_tiles: Vec<bool>,
 }
 
 impl Map {
@@ -22,7 +22,7 @@ impl Map {
             width_tiles,
             height_tiles,
             tiles: vec![TileType::Wall; width_tiles * height_tiles],
-            revealed_tiles : vec![false; width_tiles * height_tiles],
+            revealed_tiles: vec![false; width_tiles * height_tiles],
         }
     }
 
@@ -57,7 +57,11 @@ impl Map {
             && self.tiles[self.map_index(point.x as usize, point.y as usize)] == TileType::Floor
     }
 
-    pub fn is_opaque(&self, idx : usize) -> bool {
+    pub fn center(&self) -> Point {
+        Point::new(self.width_tiles as i32 / 2, self.height_tiles as i32 / 2)
+    }
+
+    pub fn is_opaque(&self, idx: usize) -> bool {
         self.tiles[idx] != TileType::Floor
     }
 }
