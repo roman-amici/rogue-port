@@ -1,7 +1,7 @@
 use bevy_ecs::system::Resource;
 use sdl2::rect::Point;
 
-#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum TileType {
     Wall,
     Floor,

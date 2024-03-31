@@ -1,33 +1,16 @@
-use std::collections::BTreeMap;
+
 
 use sdl2::{
     pixels::Color, rect::{Point, Rect}, render::{Canvas, TextureCreator}, video::{Window, WindowContext}
 };
 
 use crate::resources::*;
-use crate::SpriteType;
+
 
 use super::{sprite_sheet::SpriteSheet, sprite_sheet_info::SpriteSheetInfo};
 
-#[derive(Copy, Clone)]
-struct SpriteIndex {
-    tile_index: usize,
-    sprite_sheet_index: usize,
-}
-
-impl SpriteIndex {
-    fn new(sprite_sheet_index: usize, tile_index: usize) -> Self {
-        Self {
-            tile_index,
-            sprite_sheet_index,
-        }
-    }
-}
-
 pub struct TileRender<'a> {
     screen_tile_size: u32,
-    tile_map: BTreeMap<TileType, SpriteIndex>, //TileMap -> tile_index,
-    sprite_map: BTreeMap<SpriteType, SpriteIndex>,
     sprite_sheets: Vec<SpriteSheet<'a>>,
 }
 
@@ -37,25 +20,12 @@ impl<'a> TileRender<'a> {
         sprite_info: SpriteSheetInfo,
         texture_creator: &'a TextureCreator<WindowContext>,
     ) -> Self {
-        let mut tile_map = BTreeMap::new();
-        tile_map.insert(TileType::Wall, SpriteIndex::new(0, 35));
-        tile_map.insert(TileType::Floor, SpriteIndex::new(0, 46));
-
-        let mut sprite_map = BTreeMap::new();
-        sprite_map.insert(SpriteType::Knight, SpriteIndex::new(0, 64));
-        sprite_map.insert(SpriteType::Ogre, SpriteIndex::new(0, 69));
-        sprite_map.insert(SpriteType::Orc, SpriteIndex::new(0, 79));
-        sprite_map.insert(SpriteType::Daemon, SpriteIndex::new(0, 103));
-        sprite_map.insert(SpriteType::Goblin, SpriteIndex::new(0, 111));
-        sprite_map.insert(SpriteType::Amulet, SpriteIndex::new(0,124));
 
         let sprite_sheet = SpriteSheet::new(&sprite_info, texture_creator);
 
         Self {
             screen_tile_size,
-            sprite_map,
-            tile_map,
-            sprite_sheets: vec![sprite_sheet],
+            sprite_sheets: vec![sprite_sheet]
         }
     }
 
@@ -65,16 +35,9 @@ impl<'a> TileRender<'a> {
         col: usize,
         row: usize,
         color : Color,
-        tile_type: TileType,
+        tile_index: SpriteIndex,
     ) {
-        let tile_loc = self
-            .tile_map
-            .get(&tile_type)
-            .as_deref()
-            .map(|opt| *opt)
-            .unwrap_or(SpriteIndex::new(0, 0));
-
-        self.draw_tile_index(canvas, col, row, tile_loc, color)
+        self.draw_tile_index(canvas, col, row, tile_index, color)
     }
 
     pub fn draw_sprite(
@@ -82,16 +45,9 @@ impl<'a> TileRender<'a> {
         canvas: &mut Canvas<Window>,
         col: usize,
         row: usize,
-        sprite_type: SpriteType,
+        sprite_index: SpriteIndex,
     ) {
-        let tile_loc = self
-            .sprite_map
-            .get(&sprite_type)
-            .as_deref()
-            .map(|opt| *opt)
-            .unwrap_or(SpriteIndex::new(0, 0));
-
-        self.draw_tile_index(canvas, col, row, tile_loc, Color::RGB(255, 255, 255));
+        self.draw_tile_index(canvas, col, row, sprite_index, Color::RGB(255, 255, 255));
     }
 
     pub fn tile_to_screen_space(screen_tile_size: u32, row: i32, col: i32) -> Point {

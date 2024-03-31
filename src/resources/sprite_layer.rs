@@ -1,12 +1,12 @@
 use bevy_ecs::system::Resource;
 use sdl2::pixels::Color;
 
-use crate::SpriteType;
+use crate::SpriteIndex;
 
 pub struct SpriteRender {
     pub col: usize,
     pub row: usize,
-    pub sprite_type: SpriteType,
+    pub sprite_index: SpriteIndex,
     pub color: Color,
 }
 

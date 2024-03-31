@@ -1,9 +1,9 @@
-use bevy_ecs::{query::With, system::{NonSendMut, Query, Res, ResMut}};
+use bevy_ecs::{query::With, system::{Query, Res, ResMut}};
 use sdl2::{pixels::Color, rect::Point};
 
 use crate::{resources::*, FieldOfView, Player};
 
-pub fn map_render(player_fov : Query<&FieldOfView, With<Player>>, mut map_layer: ResMut<TileMapLayer>, map: Res<Map>, camera: Res<Camera>) {
+pub fn map_render(player_fov : Query<&FieldOfView, With<Player>>, mut map_layer: ResMut<TileMapLayer>, map: Res<Map>, camera: Res<Camera>, theme : Res<MapTheme>) {
 
     for fov in player_fov.iter() {
         for y in camera.top_y..camera.bottom_y {
@@ -25,8 +25,11 @@ pub fn map_render(player_fov : Query<&FieldOfView, With<Player>>, mut map_layer:
     
                 let x_screen = (x - camera.left_x) as usize;
                 let y_screen = (y - camera.top_y) as usize;
+
+                let tile_type = map.tiles[map_index];
+                let sprite_index = theme.tile_map[&tile_type];
     
-                map_layer.set(x_screen, y_screen, map.tiles[map_index], color);
+                map_layer.set(x_screen, y_screen, sprite_index, color);
             }
         }
     }

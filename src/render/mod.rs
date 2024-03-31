@@ -55,6 +55,6 @@ pub fn render_sprite_layer(
     tile_render: &mut TileRender,
 ) {
     for s in sprite_layer.sprites.iter() {
-        tile_render.draw_sprite(canvas, s.col, s.row, s.sprite_type);
+        tile_render.draw_sprite(canvas, s.col, s.row, s.sprite_index);
     }
 }

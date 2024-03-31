@@ -10,6 +10,7 @@ pub fn sprite_render(
     query: Query<(&Sprite, &WorldPosition)>,
     mut sprite_layer: ResMut<SpriteLayer>,
     camera: Res<Camera>,
+    theme : Res<MapTheme>,
 ) {
     let top_left = Point::new(camera.left_x, camera.top_y);
 
@@ -24,11 +25,13 @@ pub fn sprite_render(
                 && point_screen.y < camera.viewport.height_tiles as i32
                 && fov.visible_tiles.contains(&point)
             {
+                let sprite_index = theme.sprite_map[&sprite.sprite_type];
+
                 sprite_layer.sprites.push(SpriteRender {
                     col: point_screen.x as usize,
                     row: point_screen.y as usize,
                     color: sprite.color,
-                    sprite_type: sprite.sprite_type,
+                    sprite_index,
                 })
             }
         }
