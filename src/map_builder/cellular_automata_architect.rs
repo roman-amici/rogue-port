@@ -96,7 +96,7 @@ impl MapArchitect for CellularAutomataArchitect {
         }
 
         builder.player_start = Self::find_start(&builder.map);
-        builder.monster_spawn = builder.random_monster_spawns(45, builder.player_start, rng);
+        builder.spawn_points = builder.random_monster_spawns(45, builder.player_start, rng);
 
         builder.dijkstra_map.fill_all(
             (

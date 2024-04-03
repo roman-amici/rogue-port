@@ -16,7 +16,7 @@ impl MapArchitect for EmptyArchitect {
             map: Map::new(width, height),
             player_start: Point::new(0, 0),
             amulet_start: Point::new(0, 0),
-            monster_spawn: vec![],
+            spawn_points: vec![],
             dijkstra_map: DijkstraMap::new(width, height),
         };
 
@@ -26,7 +26,7 @@ impl MapArchitect for EmptyArchitect {
         mb.amulet_start = mb.find_most_distant();
 
         for _ in 0..50 {
-            mb.monster_spawn.push(Point::new(
+            mb.spawn_points.push(Point::new(
                 rng.gen_range(1..width) as i32,
                 rng.gen_range(1..height) as i32,
             ));

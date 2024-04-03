@@ -119,7 +119,7 @@ impl MapArchitect for RoomsArchitect {
         let mut builder = MapBuilder {
             map: Map::new(width, height),
             player_start: Point::new(0, 0),
-            monster_spawn: vec![],
+            spawn_points: vec![],
             amulet_start: Point::new(0, 0),
             dijkstra_map: DijkstraMap::new(width, height),
         };
@@ -140,7 +140,7 @@ impl MapArchitect for RoomsArchitect {
 
         builder.amulet_start = builder.dijkstra_map.max_distance_tile();
 
-        builder.monster_spawn = self
+        builder.spawn_points = self
             .rooms
             .iter()
             .skip(1)

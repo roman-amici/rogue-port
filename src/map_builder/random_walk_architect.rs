@@ -51,7 +51,7 @@ impl MapArchitect for RandomWalkArchitect {
 
         builder.amulet_start = builder.dijkstra_map.max_distance_tile();
 
-        builder.monster_spawn = builder.random_monster_spawns(25, builder.player_start, rng);
+        builder.spawn_points = builder.random_monster_spawns(25, builder.player_start, rng);
 
         builder
     }

@@ -1,37 +1,39 @@
+mod chasing_player;
 mod combat;
 mod end_turn;
+mod fov;
+mod game_over;
 mod health_bar_render;
+mod inventory_render;
 mod map_render;
+mod menu_input;
+mod menu_render;
 mod movement;
+mod pickup_item;
 mod player_input;
 mod random_move;
 mod sprite_render;
 mod tooltip_render;
-mod chasing_player;
-mod menu_input;
-mod menu_render;
-mod game_over;
-mod fov;
-mod pickup_item;
-mod inventory_render;
+mod use_item;
 
 use bevy_ecs::schedule::{apply_deferred, IntoSystemConfigs, Schedule};
 
+use self::chasing_player::chase;
 use self::combat::combat;
 use self::end_turn::end_turn;
+use self::fov::fov;
+use self::game_over::check_game_over;
 use self::health_bar_render::player_health_bar;
+use self::inventory_render::inventory_render;
 use self::map_render::map_render;
+use self::menu_input::menu_input;
 use self::menu_render::main_menu_render;
 use self::movement::movement;
+use self::pickup_item::pickup_item;
 use self::player_input::player_input;
 use self::sprite_render::sprite_render;
 use self::tooltip_render::tooltip;
-use self::chasing_player::chase;
-use self::menu_input::menu_input;
-use self::game_over::check_game_over;
-use self::fov::fov;
-use self::pickup_item::pickup_item;
-use self::inventory_render::inventory_render;
+use self::use_item::use_item;
 
 pub fn build_input_schedule() -> Schedule {
     let mut schedule = Schedule::default();
@@ -51,6 +53,7 @@ pub fn build_player_schedule() -> Schedule {
     let mut schedule = Schedule::default();
     schedule.add_systems(movement);
     schedule.add_systems(combat);
+    schedule.add_systems(use_item.after(combat));
     schedule.add_systems(pickup_item.after(movement));
     schedule.add_systems(fov.after(combat).before(map_render));
 

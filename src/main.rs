@@ -59,9 +59,9 @@ fn build_world(viewport: Viewport) -> State {
     let camera = Camera::new(viewport, map_builder.player_start);
 
     map_builder
-        .monster_spawn
+        .spawn_points
         .iter()
-        .for_each(|pos| spawn_monster(&mut ecs, rng, (*pos).into()));
+        .for_each(|pos| random_spawn(&mut ecs, rng, (*pos).into()));
 
     let map = map_builder.map;
 
@@ -82,6 +82,7 @@ fn build_world(viewport: Viewport) -> State {
     ecs.insert_resource(Messenger::<WantsToMove>::new());
     ecs.insert_resource(Messenger::<WantsToAttack>::new());
     ecs.insert_resource(Messenger::<SystemMessage>::new());
+    ecs.insert_resource(Messenger::<UseItem>::new());
     ecs.insert_resource(MainMenuLayer::new());
     ecs.insert_resource(HudLayer::new());
     ecs.insert_resource(GameResult::New);
@@ -230,10 +231,24 @@ fn main() -> Result<(), String> {
                             &texture_creator,
                             &font,
                         ),
-                        _ => {}
+                        HudElement::Inventory { items } => {
+                            for i in 0..(items.len()) {
+                                text_render.add_to_cache(
+                                    &format!("{}", i),
+                                    Color::RGB(255, 255, 255),
+                                    &texture_creator,
+                                    &font,
+                                )
+                            }
+                        }
                     }
                 }
-                hud_render.render_hud_layer(&hud_layer, &mut canvas, &mut text_render, &mut tile_render);
+                hud_render.render_hud_layer(
+                    &hud_layer,
+                    &mut canvas,
+                    &mut text_render,
+                    &mut tile_render,
+                );
             }
 
             canvas.present();

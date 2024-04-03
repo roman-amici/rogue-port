@@ -26,3 +26,7 @@ pub enum SystemMessage {
     ShouldQuit,
     NewGame,
 }
+
+pub struct UseItem {
+    pub entity: Entity,
+}

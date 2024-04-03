@@ -7,7 +7,7 @@ use crate::{resources::*, utilities::dijkstra_map::DijkstraMap};
 
 pub struct MapBuilder {
     pub map: Map,
-    pub monster_spawn: Vec<Point>,
+    pub spawn_points: Vec<Point>,
     pub player_start: Point,
     pub amulet_start: Point,
     pub dijkstra_map: DijkstraMap,
@@ -17,7 +17,7 @@ impl MapBuilder {
     pub fn empty(width: usize, height: usize) -> Self {
         Self {
             map: Map::new(width, height),
-            monster_spawn: vec![],
+            spawn_points: vec![],
             player_start: Point::new(0, 0),
             amulet_start: Point::new(0, 0),
             dijkstra_map: DijkstraMap::new(width, height),
