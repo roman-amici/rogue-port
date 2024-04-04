@@ -5,6 +5,7 @@ use sdl2::rect::Point;
 pub enum TileType {
     Wall,
     Floor,
+    Stairs,
 }
 
 #[derive(Resource)]
@@ -54,7 +55,7 @@ impl Map {
 
     pub fn can_enter(&self, point: Point) -> bool {
         self.in_bounds(point)
-            && self.tiles[self.map_index(point.x as usize, point.y as usize)] == TileType::Floor
+            && self.tiles[self.map_index(point.x as usize, point.y as usize)] != TileType::Wall
     }
 
     pub fn center(&self) -> Point {

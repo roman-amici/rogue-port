@@ -1,4 +1,5 @@
 mod chasing_player;
+mod check_level_transition;
 mod combat;
 mod end_turn;
 mod fov;
@@ -9,16 +10,20 @@ mod map_render;
 mod menu_input;
 mod menu_render;
 mod movement;
+mod new_level_map;
 mod pickup_item;
 mod player_input;
 mod random_move;
+mod remove_level_entities;
 mod sprite_render;
+mod start_level;
 mod tooltip_render;
 mod use_item;
 
 use bevy_ecs::schedule::{apply_deferred, IntoSystemConfigs, Schedule};
 
 use self::chasing_player::chase;
+use self::check_level_transition::check_level_transition;
 use self::combat::combat;
 use self::end_turn::end_turn;
 use self::fov::fov;
@@ -29,9 +34,12 @@ use self::map_render::map_render;
 use self::menu_input::menu_input;
 use self::menu_render::main_menu_render;
 use self::movement::movement;
+use self::new_level_map::new_level_map;
 use self::pickup_item::pickup_item;
 use self::player_input::player_input;
+use self::remove_level_entities::remove_level_entities;
 use self::sprite_render::sprite_render;
+use self::start_level::start_level;
 use self::tooltip_render::tooltip;
 use self::use_item::use_item;
 
@@ -64,6 +72,7 @@ pub fn build_player_schedule() -> Schedule {
     schedule.add_systems(sprite_render.after(apply_deferred));
     schedule.add_systems(player_health_bar.after(combat));
     schedule.add_systems(inventory_render.after(apply_deferred));
+    schedule.add_systems(check_level_transition.after(movement).before(end_turn));
 
     schedule.add_systems(end_turn.after(sprite_render));
 
@@ -100,6 +109,17 @@ pub fn build_menu_schedule() -> Schedule {
 
     schedule.add_systems(main_menu_render);
     schedule.add_systems(menu_input);
+
+    schedule
+}
+
+pub fn build_level_transition_schedule() -> Schedule {
+    let mut schedule = Schedule::default();
+
+    schedule.add_systems(remove_level_entities);
+    schedule.add_systems(apply_deferred.after(remove_level_entities));
+    schedule.add_systems(new_level_map.after(apply_deferred));
+    schedule.add_systems(start_level);
 
     schedule
 }

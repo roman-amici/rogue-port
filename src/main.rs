@@ -33,6 +33,7 @@ struct State {
     player_turn: Schedule,
     enemy_turn: Schedule,
     menu_schedule: Schedule,
+    level_transition_schedule: Schedule,
 }
 
 #[derive(Resource, Copy, Clone, Debug, PartialEq)]
@@ -41,6 +42,7 @@ enum TurnState {
     PlayerTurn,
     EnemyTurn,
     GameEnd,
+    LevelTransition,
 }
 
 fn build_world(viewport: Viewport) -> State {
@@ -63,9 +65,13 @@ fn build_world(viewport: Viewport) -> State {
         .iter()
         .for_each(|pos| random_spawn(&mut ecs, rng, (*pos).into()));
 
-    let map = map_builder.map;
+    let mut map = map_builder.map;
 
-    spawn_amulet(&mut ecs, map_builder.amulet_start.into());
+    let index = map.map_index(
+        map_builder.amulet_start.x as usize,
+        map_builder.amulet_start.y as usize,
+    );
+    map.tiles[index] = TileType::Stairs;
 
     ecs.insert_resource(TileMapLayer::new(
         camera.viewport.width_tiles as usize,
@@ -95,6 +101,7 @@ fn build_world(viewport: Viewport) -> State {
         player_turn: build_player_schedule(),
         enemy_turn: build_enemy_schedule(),
         menu_schedule: build_menu_schedule(),
+        level_transition_schedule: build_level_transition_schedule(),
     }
 }
 
@@ -172,6 +179,7 @@ fn main() -> Result<(), String> {
                 TurnState::PlayerTurn => state.player_turn.run(&mut state.ecs),
                 TurnState::EnemyTurn => state.enemy_turn.run(&mut state.ecs),
                 TurnState::GameEnd => state.menu_schedule.run(&mut state.ecs),
+                TurnState::LevelTransition => state.level_transition_schedule.run(&mut state.ecs),
             }
 
             let mut system_messages = state.ecs.resource_mut::<Messenger<SystemMessage>>();

@@ -19,6 +19,9 @@ pub trait MapArchitect {
 
 pub fn random_architect(rng: &mut dyn RngCore) -> Box<dyn MapArchitect> {
     match rng.gen_range(0..50) {
-        _ => Box::new(RandomWalkArchitect {}),
+        0..=15 => Box::new(CellularAutomataArchitect {}),
+        16..=30 => Box::new(RoomsArchitect::new()),
+        31..=48 => Box::new(RandomWalkArchitect {}),
+        _ => Box::new(EmptyArchitect {}),
     }
 }
